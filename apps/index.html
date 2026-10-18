@@ -10,26 +10,48 @@
   body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.7;
          font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif; }
   header { background: #fff; border-bottom: 1px solid var(--line); padding: 20px 24px; }
-  header .inner, main { max-width: 1080px; margin: 0 auto; }
+  header .inner, main { max-width: 1200px; margin: 0 auto; }
   h1 { margin: 0 0 4px; font-size: 24px; }
   header p { margin: 0; color: var(--muted); font-size: 14px; }
   .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
   .btn { display: inline-block; background: var(--accent); color: #fff; text-decoration: none; font-weight: bold;
-         padding: 8px 18px; border-radius: 6px; border: none; font-size: 15px; cursor: pointer; }
+         padding: 8px 18px; border-radius: 6px; border: none; font-size: 15px; cursor: pointer; font-family: inherit; }
   .btn.secondary { background: #fff; color: var(--text); border: 1px solid var(--line); font-weight: normal; }
-  .btn[aria-disabled="true"] { background: #ccc; pointer-events: none; }
+  .btn:disabled { background: #ccc; cursor: default; }
   #search { flex: 1 1 220px; max-width: 320px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px; }
   main { padding: 20px 24px 60px; }
   #status { color: var(--muted); font-size: 14px; margin: 0 0 14px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
-  .card { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px;
-          display: flex; flex-direction: column; gap: 6px; }
-  .card h2 { margin: 0; font-size: 18px; word-break: break-word; }
-  .card .author { color: var(--muted); font-size: 13px; }
-  .card .desc { font-size: 14px; flex: 1; white-space: pre-wrap; word-break: break-word; }
-  .card .open { align-self: flex-start; margin-top: 6px; }
-  .card .date { color: #a59d93; font-size: 12px; }
-  .notice { background: #fff4e5; border-left: 4px solid #e8a33d; padding: 12px 16px; border-radius: 8px; font-size: 14px; }
+  .notice { background: #fff4e5; border-left: 4px solid #e8a33d; padding: 12px 16px; border-radius: 8px; font-size: 14px; color: var(--text); }
+
+  /* ---- タイル一覧 ---- */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .tile { display: block; background: #fff; border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+          text-decoration: none; color: inherit; transition: transform 0.15s, box-shadow 0.15s; }
+  .tile:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,0.1); }
+  .thumb { aspect-ratio: 16 / 10; background: #eee center / cover no-repeat; display: flex; align-items: center; justify-content: center;
+           font-size: 44px; font-weight: bold; color: rgba(255,255,255,0.9); }
+  .tile .body { padding: 10px 14px 12px; }
+  .tile h2 { margin: 0; font-size: 16px; line-height: 1.5; word-break: break-word; }
+  .tile .author { color: var(--muted); font-size: 13px; }
+
+  /* ---- 登録ダイアログ ---- */
+  dialog { border: none; border-radius: 12px; padding: 0; width: min(520px, 94vw); box-shadow: 0 10px 40px rgba(0,0,0,0.25); }
+  dialog::backdrop { background: rgba(0,0,0,0.45); }
+  .dlg { padding: 20px 24px; }
+  .dlg h2 { margin: 0 0 12px; font-size: 20px; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-weight: bold; font-size: 14px; margin-bottom: 4px; }
+  .field .hint { font-size: 12px; color: var(--muted); }
+  .field input[type=text], .field input[type=url] { width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; font-family: inherit; }
+  #dropZone { border: 2px dashed #d6d0c8; border-radius: 8px; padding: 10px; text-align: center; font-size: 13px; color: var(--muted);
+              cursor: pointer; background: #fcfbf9; }
+  #dropZone.over { border-color: var(--accent); background: #fbeee8; }
+  #preview { display: none; max-width: 100%; max-height: 200px; margin: 8px auto 0; border-radius: 6px; border: 1px solid var(--line); }
+  .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+  #formMsg { min-height: 20px; font-size: 14px; color: #c0392b; margin-top: 8px; }
+  #formMsg.ok { color: #2f9e44; }
+  .warn { font-size: 12px; color: #9c6b1e; background: #fff4e5; border-radius: 6px; padding: 6px 10px; margin-bottom: 12px; }
+
   footer { text-align: center; font-size: 13px; color: var(--muted); padding-bottom: 30px; }
   footer a { color: #b4532f; }
 </style>
@@ -38,89 +60,83 @@
 <header>
   <div class="inner">
     <h1>みんなのWebアプリ一覧</h1>
-    <p>Claude Code への指示で作ったWebアプリを紹介します。カードの「開く」で別タブでアプリが開きます。</p>
+    <p>Claude Code への指示で作ったWebアプリを紹介します。タイルをクリックすると、別タブでアプリが開きます。</p>
     <div class="toolbar">
-      <a id="registerBtn" class="btn" href="#" target="_blank" rel="noopener" aria-disabled="true">＋ 自分のアプリを登録する</a>
+      <button id="openRegister" class="btn" type="button" disabled>＋ 自分のアプリを登録する</button>
       <button id="reloadBtn" class="btn secondary" type="button">最新の一覧を読み込む</button>
-      <input id="search" type="search" placeholder="アプリ名・ニックネームで絞り込み">
+      <input id="search" type="search" placeholder="アプリ名・作成者で絞り込み">
     </div>
   </div>
 </header>
 
 <main>
-  <p id="status">読み込み中…</p>
+  <div id="status">読み込み中…</div>
   <div id="list" class="grid"></div>
 </main>
 
 <footer><a href="../guide/" target="_blank" rel="noopener">演習の手順書(guide)はこちら</a></footer>
 
+<dialog id="registerDlg">
+  <form id="registerForm" class="dlg" method="dialog" novalidate>
+    <h2>アプリを登録する</h2>
+    <div class="warn">一覧は誰でも見られます。本名や学籍番号ではなく、ニックネームを使ってください。</div>
+    <div class="field">
+      <label for="fAuthor">作成者(ニックネーム)</label>
+      <input id="fAuthor" type="text" maxlength="40" required placeholder="例: めいじ太郎">
+    </div>
+    <div class="field">
+      <label for="fName">アプリ名</label>
+      <input id="fName" type="text" maxlength="40" required placeholder="例: もぐらたたき">
+    </div>
+    <div class="field">
+      <label for="fUrl">アプリの URL</label>
+      <input id="fUrl" type="url" required placeholder="https://ユーザー名.github.io/リポジトリ名/">
+      <div class="hint">同じ URL でもう一度登録すると、新しい内容に置き換わります。</div>
+    </div>
+    <div class="field">
+      <label>スクリーンショット(任意)</label>
+      <div id="dropZone" tabindex="0">クリックして画像を選ぶ / ここに画像をドラッグ / <b>Ctrl+V で貼り付け</b></div>
+      <input id="fImage" type="file" accept="image/*" hidden>
+      <img id="preview" alt="スクリーンショットのプレビュー">
+    </div>
+    <div id="formMsg"></div>
+    <div class="actions">
+      <button id="cancelBtn" class="btn secondary" type="button">キャンセル</button>
+      <button id="submitBtn" class="btn" type="submit">登録する</button>
+    </div>
+  </form>
+</dialog>
+
 <script src="config.js"></script>
 <script>
-const cfg = window.APPS_CONFIG || {};
+const API_URL = (window.APPS_CONFIG || {}).API_URL || '';
 const statusEl = document.getElementById('status');
 const listEl = document.getElementById('list');
 const searchEl = document.getElementById('search');
 let apps = [];
 
-// 登録ボタン(フォームが設定されていれば有効にする)
-const registerBtn = document.getElementById('registerBtn');
-if (cfg.FORM_URL) {
-  registerBtn.href = cfg.FORM_URL;
-  registerBtn.removeAttribute('aria-disabled');
-}
-
-// CSV を行・列の配列に変換する(ダブルクォート内のカンマ・改行にも対応)
-function parseCSV(text) {
-  const rows = [];
-  let row = [], field = '', inQuotes = false;
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    if (inQuotes) {
-      if (ch === '"' && text[i + 1] === '"') { field += '"'; i++; }
-      else if (ch === '"') inQuotes = false;
-      else field += ch;
-    } else if (ch === '"') inQuotes = true;
-    else if (ch === ',') { row.push(field); field = ''; }
-    else if (ch === '\n' || ch === '\r') {
-      if (ch === '\r' && text[i + 1] === '\n') i++;
-      row.push(field); rows.push(row); row = []; field = '';
-    } else field += ch;
-  }
-  if (field !== '' || row.length) { row.push(field); rows.push(row); }
-  return rows.filter(r => r.some(c => c.trim() !== ''));
-}
-
-// 見出しに含まれる言葉から列を探す(フォームの質問の順番が変わっても動くように)
-function findCol(header, words) {
-  return header.findIndex(h => words.some(w => h.includes(w)));
-}
-
-// 安全のため、http(s) の URL だけをリンクにする
+// 安全のため、http(s) の URL だけを扱う
 function safeUrl(s) {
   try {
-    const u = new URL(s.trim());
+    const u = new URL(String(s).trim());
     return (u.protocol === 'https:' || u.protocol === 'http:') ? u.href : null;
   } catch (e) { return null; }
 }
+const safeImage = s => /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(s || '') ? s : '';
 
-function toApps(rows) {
-  const [header, ...body] = rows;
-  const col = {
-    time: findCol(header, ['タイムスタンプ', 'Timestamp']),
-    name: findCol(header, ['アプリ名']),
-    author: findCol(header, ['ニックネーム', '作者']),
-    url: findCol(header, ['URL', 'url']),
-    desc: findCol(header, ['説明', 'ひとこと']),
-  };
-  const get = (r, i) => (i >= 0 && r[i] ? r[i].trim() : '');
-  const byUrl = new Map(); // 同じ URL が何度も登録されたら最新のものだけ残す
-  for (const r of body) {
-    const url = safeUrl(get(r, col.url));
-    if (!url) continue;
-    byUrl.delete(url); // 上書きだけだと並び順が最初の登録位置のままになるので、消してから入れ直す
-    byUrl.set(url, { time: get(r, col.time), name: get(r, col.name) || '(名前なし)', author: get(r, col.author), url, desc: get(r, col.desc) });
-  }
-  return [...byUrl.values()].reverse(); // 新しい登録を先頭に
+// 画像がないアプリは、アプリ名から決まる色と頭文字で代わりのタイルを作る
+function colorFor(text) {
+  let h = 0;
+  for (const ch of text) h = (h * 31 + ch.codePointAt(0)) % 360;
+  return `hsl(${h}, 55%, 62%)`;
+}
+
+function showNotice(text) {
+  statusEl.innerHTML = '';
+  const n = document.createElement('div');
+  n.className = 'notice';
+  n.textContent = text;
+  statusEl.appendChild(n);
 }
 
 function render() {
@@ -128,43 +144,156 @@ function render() {
   const shown = apps.filter(a => !q || (a.name + ' ' + a.author).toLowerCase().includes(q));
   listEl.innerHTML = '';
   for (const a of shown) {
-    // 学生の入力をそのまま表示するので、innerHTML ではなく textContent を使う
-    const card = document.createElement('div');
-    card.className = 'card';
+    // 学生の入力を表示するので、innerHTML ではなく textContent を使う
+    const tile = document.createElement('a');
+    tile.className = 'tile';
+    tile.href = a.url;
+    tile.target = '_blank';
+    tile.rel = 'noopener noreferrer';
+    const thumb = document.createElement('div');
+    thumb.className = 'thumb';
+    if (a.image) {
+      thumb.style.backgroundImage = `url("${a.image}")`;
+    } else {
+      thumb.style.backgroundColor = colorFor(a.name);
+      thumb.textContent = [...a.name][0] || '?';
+    }
+    const body = document.createElement('div');
+    body.className = 'body';
     const h = document.createElement('h2'); h.textContent = a.name;
-    const au = document.createElement('div'); au.className = 'author'; au.textContent = a.author ? `作: ${a.author}` : '';
-    const d = document.createElement('div'); d.className = 'desc'; d.textContent = a.desc;
-    const link = document.createElement('a');
-    link.className = 'btn open'; link.href = a.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = '開く';
-    const t = document.createElement('div'); t.className = 'date'; t.textContent = a.time ? `登録: ${a.time}` : '';
-    card.append(h, au, d, link, t);
-    listEl.appendChild(card);
+    const au = document.createElement('div'); au.className = 'author'; au.textContent = `作: ${a.author}`;
+    body.append(h, au);
+    tile.append(thumb, body);
+    listEl.appendChild(tile);
   }
   statusEl.textContent = apps.length === 0 ? 'まだ登録されたアプリはありません。最初の登録者になりましょう!'
     : `${apps.length} 件のアプリが登録されています${q ? `(絞り込み: ${shown.length} 件)` : ''}`;
 }
 
 function load() {
-  if (!cfg.CSV_URL) {
-    statusEl.innerHTML = '';
-    const n = document.createElement('div');
-    n.className = 'notice';
-    n.textContent = 'アプリ一覧は準備中です。登録の受け付けが始まるまでお待ちください。';
-    statusEl.appendChild(n);
-    return;
-  }
+  if (!API_URL) { showNotice('アプリ一覧は準備中です。登録の受け付けが始まるまでお待ちください。'); return; }
+  document.getElementById('openRegister').disabled = false;
   statusEl.textContent = '読み込み中…';
-  // キャッシュされた古い一覧を避けるため、毎回違うパラメータを付ける
-  const sep = cfg.CSV_URL.includes('?') ? '&' : '?';
-  fetch(`${cfg.CSV_URL}${sep}t=${Date.now()}`)
-    .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
-    .then(text => { apps = toApps(parseCSV(text)); render(); })
+  fetch(`${API_URL}?t=${Date.now()}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ok) throw new Error();
+      apps = data.apps
+        .map(a => ({ time: a.time, author: String(a.author), name: String(a.name), url: safeUrl(a.url), image: safeImage(a.image) }))
+        .filter(a => a.url)
+        .reverse(); // 新しい登録を先頭に
+      render();
+    })
     .catch(() => { statusEl.textContent = '一覧を読み込めませんでした。しばらくしてから「最新の一覧を読み込む」を押してください。'; });
 }
 
+// ---- 登録 ----
+const dlg = document.getElementById('registerDlg');
+const form = document.getElementById('registerForm');
+const formMsg = document.getElementById('formMsg');
+const preview = document.getElementById('preview');
+const fileInput = document.getElementById('fImage');
+const dropZone = document.getElementById('dropZone');
+let imageData = '';
+
+function setFormMsg(text, ok) {
+  formMsg.textContent = text;
+  formMsg.classList.toggle('ok', !!ok);
+}
+
+// スクリーンショットを縮小し、スプレッドシートの1セル(最大5万文字)に収まる JPEG にする
+function shrinkImage(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(img.src);
+      for (const maxW of [640, 480, 360]) {
+        const scale = Math.min(1, maxW / img.width);
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * scale);
+        c.height = Math.round(img.height * scale);
+        const g = c.getContext('2d');
+        g.fillStyle = '#fff'; // 透明部分を白にする(JPEG は透明を扱えないため)
+        g.fillRect(0, 0, c.width, c.height);
+        g.drawImage(img, 0, 0, c.width, c.height);
+        for (const q of [0.8, 0.65, 0.5, 0.4]) {
+          const url = c.toDataURL('image/jpeg', q);
+          if (url.length <= 45000) { resolve(url); return; }
+        }
+      }
+      reject(new Error('too large'));
+    };
+    img.onerror = () => reject(new Error('not image'));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+function useImageFile(file) {
+  if (!file || !file.type.startsWith('image/')) { setFormMsg('画像ファイルを選んでください'); return; }
+  setFormMsg('画像を準備しています…', true);
+  shrinkImage(file)
+    .then(url => { imageData = url; preview.src = url; preview.style.display = 'block'; setFormMsg(''); })
+    .catch(() => setFormMsg('この画像は使えませんでした。別の画像を選んでください'));
+}
+
+function openRegister() {
+  form.reset();
+  imageData = '';
+  preview.style.display = 'none';
+  setFormMsg('');
+  document.getElementById('submitBtn').disabled = false;
+  dlg.showModal();
+}
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
+fileInput.addEventListener('change', () => useImageFile(fileInput.files[0]));
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('over'); useImageFile(e.dataTransfer.files[0]); });
+// Win+Shift+S などで撮ったスクリーンショットを、そのまま Ctrl+V で貼り付けられるようにする
+dlg.addEventListener('paste', e => {
+  const item = [...e.clipboardData.items].find(i => i.type.startsWith('image/'));
+  if (item) { e.preventDefault(); useImageFile(item.getAsFile()); }
+});
+
+document.getElementById('cancelBtn').addEventListener('click', () => dlg.close());
+
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  const author = document.getElementById('fAuthor').value.trim();
+  const name = document.getElementById('fName').value.trim();
+  const url = safeUrl(document.getElementById('fUrl').value);
+  if (!author || !name) { setFormMsg('作成者とアプリ名を入力してください'); return; }
+  if (!url) { setFormMsg('URL は https:// から始まる形で入力してください'); return; }
+
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true;
+  setFormMsg('送信中…', true);
+  // Content-Type を text/plain にすると、Apps Script でも受け付けられる形で送信できる
+  fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ author, name, url, image: imageData }),
+  })
+    .then(r => r.json())
+    .then(res => {
+      if (!res.ok) { const err = new Error(res.error || ''); err.fromServer = true; throw err; }
+      setFormMsg('登録しました!', true);
+      setTimeout(() => { dlg.close(); load(); }, 800);
+    })
+    .catch(err => {
+      submitBtn.disabled = false;
+      setFormMsg(err.fromServer && err.message ? `登録できませんでした: ${err.message}` : '登録できませんでした。時間をおいてもう一度試してください');
+    });
+});
+
+document.getElementById('openRegister').addEventListener('click', openRegister);
 document.getElementById('reloadBtn').addEventListener('click', load);
 searchEl.addEventListener('input', render);
 load();
+// 手順書などから …/apps/#register で開いたときは、登録欄を最初から開く
+if (location.hash === '#register' && API_URL) openRegister();
 </script>
 </body>
 </html>

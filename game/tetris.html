@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>テトリス</title>
+<style>
+  body { margin:0; background:#111; color:#eee; font-family:sans-serif;
+         display:flex; justify-content:center; align-items:flex-start; gap:24px; padding-top:40px; }
+  canvas { background:#000; border:2px solid #555; }
+  .side { min-width:160px; }
+  .side h2 { margin:0 0 8px; font-size:18px; }
+  .side p { margin:4px 0; }
+  .help { margin-top:24px; font-size:13px; color:#aaa; line-height:1.6; }
+</style>
+</head>
+<body>
+<canvas id="board" width="300" height="600"></canvas>
+<div class="side">
+  <h2>NEXT</h2>
+  <canvas id="next" width="120" height="120"></canvas>
+  <p>スコア: <span id="score">0</span></p>
+  <p>ライン: <span id="lines">0</span></p>
+  <p>レベル: <span id="level">1</span></p>
+  <div class="help">
+    ← → : 移動<br>↓ : ソフトドロップ<br>↑ / X : 右回転<br>Z : 左回転<br>
+    Space : ハードドロップ<br>P : 一時停止<br>Enter : リスタート
+  </div>
+</div>
+<script>
+const COLS = 10, ROWS = 20, SIZE = 30;
+const board = document.getElementById('board').getContext('2d');
+const next = document.getElementById('next').getContext('2d');
+
+const SHAPES = {
+  I: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+  O: [[1,1],[1,1]],
+  T: [[0,1,0],[1,1,1],[0,0,0]],
+  S: [[0,1,1],[1,1,0],[0,0,0]],
+  Z: [[1,1,0],[0,1,1],[0,0,0]],
+  J: [[1,0,0],[1,1,1],[0,0,0]],
+  L: [[0,0,1],[1,1,1],[0,0,0]],
+};
+const COLORS = { I:'#00e5ff', O:'#ffeb3b', T:'#ab47bc', S:'#66bb6a', Z:'#ef5350', J:'#42a5f5', L:'#ffa726' };
+
+let grid, piece, nextType, bag, score, lines, level, dropTimer, lastTime, gameOver, paused;
+
+const emptyGrid = () => Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+
+// 7種1セットのランダム(7-bag)
+function drawType() {
+  if (!bag || bag.length === 0) {
+    bag = Object.keys(SHAPES);
+    for (let i = bag.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [bag[i], bag[j]] = [bag[j], bag[i]];
+    }
+  }
+  return bag.pop();
+}
+
+function spawn() {
+  const type = nextType;
+  nextType = drawType();
+  const shape = SHAPES[type].map(r => r.slice());
+  piece = { type, shape, x: Math.floor((COLS - shape[0].length) / 2), y: type === 'I' ? -1 : 0 };
+  if (collides(piece.shape, piece.x, piece.y)) gameOver = true;
+}
+
+function collides(shape, px, py) {
+  for (let y = 0; y < shape.length; y++)
+    for (let x = 0; x < shape[y].length; x++) {
+      if (!shape[y][x]) continue;
+      const nx = px + x, ny = py + y;
+      if (nx < 0 || nx >= COLS || ny >= ROWS) return true;
+      if (ny >= 0 && grid[ny][nx]) return true;
+    }
+  return false;
+}
+
+function rotate(shape, dir) {
+  const n = shape.length;
+  const res = Array.from({ length: n }, () => Array(n).fill(0));
+  for (let y = 0; y < n; y++)
+    for (let x = 0; x < n; x++)
+      if (dir > 0) res[x][n - 1 - y] = shape[y][x];
+      else res[n - 1 - x][y] = shape[y][x];
+  return res;
+}
+
+function tryRotate(dir) {
+  const rotated = rotate(piece.shape, dir);
+  // 壁際でも回せるよう左右にずらして試す(簡易キック)
+  for (const dx of [0, -1, 1, -2, 2]) {
+    if (!collides(rotated, piece.x + dx, piece.y)) {
+      piece.shape = rotated; piece.x += dx; return;
+    }
+  }
+}
+
+function move(dx, dy) {
+  if (!collides(piece.shape, piece.x + dx, piece.y + dy)) {
+    piece.x += dx; piece.y += dy; return true;
+  }
+  return false;
+}
+
+function lock() {
+  piece.shape.forEach((row, y) => row.forEach((v, x) => {
+    if (v && piece.y + y >= 0) grid[piece.y + y][piece.x + x] = piece.type;
+  }));
+  clearLines();
+  spawn();
+}
+
+function clearLines() {
+  let cleared = 0;
+  for (let y = ROWS - 1; y >= 0; y--) {
+    if (grid[y].every(c => c)) {
+      grid.splice(y, 1);
+      grid.unshift(Array(COLS).fill(null));
+      cleared++; y++;
+    }
+  }
+  if (cleared) {
+    score += [0, 100, 300, 500, 800][cleared] * level;
+    lines += cleared;
+    level = Math.floor(lines / 10) + 1;
+  }
+}
+
+function hardDrop() {
+  let d = 0;
+  while (move(0, 1)) d++;
+  score += d * 2;
+  lock();
+}
+
+const dropInterval = () => Math.max(100, 1000 - (level - 1) * 90);
+
+function drawCell(ctx, x, y, color, alpha = 1) {
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = color;
+  ctx.fillRect(x * SIZE, y * SIZE, SIZE - 1, SIZE - 1);
+  ctx.globalAlpha = 1;
+}
+
+function render() {
+  board.clearRect(0, 0, COLS * SIZE, ROWS * SIZE);
+  grid.forEach((row, y) => row.forEach((c, x) => { if (c) drawCell(board, x, y, COLORS[c]); }));
+
+  // ゴースト(落下予測位置)
+  let gy = piece.y;
+  while (!collides(piece.shape, piece.x, gy + 1)) gy++;
+  piece.shape.forEach((row, y) => row.forEach((v, x) => {
+    if (v) drawCell(board, piece.x + x, gy + y, COLORS[piece.type], 0.25);
+  }));
+  piece.shape.forEach((row, y) => row.forEach((v, x) => {
+    if (v) drawCell(board, piece.x + x, piece.y + y, COLORS[piece.type]);
+  }));
+
+  next.clearRect(0, 0, 120, 120);
+  const ns = SHAPES[nextType];
+  const off = (4 - ns.length) / 2;
+  ns.forEach((row, y) => row.forEach((v, x) => { if (v) drawCell(next, x + off, y + off, COLORS[nextType]); }));
+
+  document.getElementById('score').textContent = score;
+  document.getElementById('lines').textContent = lines;
+  document.getElementById('level').textContent = level;
+
+  if (gameOver || paused) {
+    board.fillStyle = 'rgba(0,0,0,0.6)';
+    board.fillRect(0, 0, COLS * SIZE, ROWS * SIZE);
+    board.fillStyle = '#fff';
+    board.font = 'bold 28px sans-serif';
+    board.textAlign = 'center';
+    board.fillText(gameOver ? 'GAME OVER' : 'PAUSE', COLS * SIZE / 2, ROWS * SIZE / 2);
+    if (gameOver) {
+      board.font = '16px sans-serif';
+      board.fillText('Enterでリスタート', COLS * SIZE / 2, ROWS * SIZE / 2 + 32);
+    }
+  }
+}
+
+function loop(time) {
+  const dt = time - lastTime;
+  lastTime = time;
+  if (!gameOver && !paused) {
+    dropTimer += dt;
+    if (dropTimer > dropInterval()) {
+      dropTimer = 0;
+      if (!move(0, 1)) lock();
+    }
+  }
+  render();
+  requestAnimationFrame(loop);
+}
+
+function reset() {
+  grid = emptyGrid();
+  bag = [];
+  score = 0; lines = 0; level = 1;
+  dropTimer = 0;
+  gameOver = false; paused = false;
+  nextType = drawType();
+  spawn();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { reset(); return; }
+  if (gameOver) return;
+  if (e.key === 'p' || e.key === 'P') { paused = !paused; return; }
+  if (paused) return;
+  switch (e.key) {
+    case 'ArrowLeft': move(-1, 0); break;
+    case 'ArrowRight': move(1, 0); break;
+    case 'ArrowDown': if (move(0, 1)) score += 1; dropTimer = 0; break;
+    case 'ArrowUp': case 'x': case 'X': tryRotate(1); break;
+    case 'z': case 'Z': tryRotate(-1); break;
+    case ' ': hardDrop(); break;
+    default: return;
+  }
+  e.preventDefault();
+});
+
+reset();
+lastTime = performance.now();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

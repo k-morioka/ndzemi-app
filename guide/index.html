@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Code で Webアプリを作ろう — 演習手順</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <button id="menuToggle" class="menu-toggle" aria-label="目次を開く">☰</button>
+  <h1>Claude Code で Webアプリを作ろう</h1>
+</header>
+
+<div class="layout">
+  <nav id="sidebar" class="sidebar">
+    <div class="progress">
+      <div class="progress-label">進み具合 <span id="progressText">0 / 0</span></div>
+      <div class="progress-bar"><div id="progressFill"></div></div>
+    </div>
+    <ol class="toc">
+      <li><a href="#purpose">演習の目的</a></li>
+      <li><a href="#setup">Claude Codeの準備</a></li>
+      <li><a href="#first-app">最初のWebアプリを作る</a></li>
+      <li><a href="#improve">AIと対話しながら改良する</a></li>
+      <li><a href="#publish">GitHub Pagesで公開する <span class="badge">発展</span></a></li>
+    </ol>
+    <button id="resetProgress" class="reset">チェックをすべて外す</button>
+  </nav>
+
+  <main>
+    <!-- ===================== 0. 演習の目的 ===================== -->
+    <section id="purpose">
+      <h2><span class="num">0</span>演習の目的</h2>
+      <p class="lead">
+        <b>自然言語(ふだんの日本語)でAIに指示して、Webアプリを制作します。</b><br>
+        今回は、プログラムを自分で一から書くことよりも、
+        <b>AIへの指示</b>と<b>動作確認・改良</b>を重視します。
+      </p>
+
+      <h3>この演習で身につけたいこと</h3>
+      <div class="cycle">
+        <div class="cycle-step">① 指示する<small>何を作りたいかを言葉で伝える</small></div>
+        <div class="cycle-arrow">→</div>
+        <div class="cycle-step">② AIが作る<small>AIがファイルを作成・編集する</small></div>
+        <div class="cycle-arrow">→</div>
+        <div class="cycle-step">③ 動かして確かめる<small>ブラウザで実際に操作する</small></div>
+        <div class="cycle-arrow">→</div>
+        <div class="cycle-step">④ 気づいたことを伝える<small>不具合・改善点を具体的に</small></div>
+      </div>
+      <p>この①〜④を何度も繰り返して、アプリを少しずつ良くしていきます。</p>
+
+      <h3>心がけてほしいこと</h3>
+      <ul>
+        <li><b>AIは間違えることがあります。</b>「できました」と言われても、必ず自分で動かして確認しましょう。</li>
+        <li>コードを全部理解する必要はありませんが、<b>AIが何をしたのか説明を読む</b>習慣をつけましょう。分からなければAIに質問してかまいません。</li>
+        <li><b>個人情報・パスワード・他人の作品など</b>をAIに入力しないでください。</li>
+      </ul>
+
+      <div class="callout tip">
+        <b>作例:</b> このフォルダの <a href="../game/index.html" target="_blank" rel="noopener">game(ブロックス)</a> も、
+        Claude Code への日本語の指示だけで作りました。
+        「まずはシンプルなものから」と頼み、遊びながら「CPU対戦にしたい」「表示が縦長になる」などと改良を重ねています。
+      </div>
+    </section>
+
+    <!-- ===================== 1. Claude Codeの準備 ===================== -->
+    <section id="setup">
+      <h2><span class="num">1</span>Claude Codeの準備</h2>
+      <p>VS Code(エディター)に Claude Code の拡張機能を入れ、<b>メイジメールに届いた招待</b>のアカウントでログインします。</p>
+
+      <ol class="steps">
+        <li data-step="setup-invite">
+          <h4>メイジメールで招待メールを確認する</h4>
+          <p>Claude Code を使うための <b>Anthropic Console(Claude Platform)</b>への招待メールは、皆さんの<b>メイジメール</b>(大学のメールアドレス)に送ってあります。
+            メイジメールを開き、Anthropic からの招待メールを探して、メール内のボタンから招待を受け入れてください。</p>
+          <div class="callout warn">見つからないときは<b>迷惑メールフォルダ</b>も確認してください。</div>
+        </li>
+        <li data-step="setup-vscode">
+          <h4>VS Code を用意する</h4>
+          <p>まだ入っていない場合は <a href="https://code.visualstudio.com/" target="_blank" rel="noopener">code.visualstudio.com</a> からダウンロードしてインストールします。</p>
+        </li>
+        <li data-step="setup-install">
+          <h4>Claude Code 拡張機能をインストールする</h4>
+          <p>VS Code の左側にある<b>拡張機能</b>アイコン(四角が4つのマーク)をクリックするか、<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd> を押します。
+            検索欄に <code>Claude Code</code> と入力し、<b>「Claude Code for VS Code」(発行元: Anthropic ✔ anthropic.com)</b>を選んで「インストール」を押します。</p>
+          <figure class="shot" data-src="images/setup-install.png">
+            <figcaption>拡張機能の検索結果。一番上の「Claude Code for VS Code」(Anthropic)が正しいもの(画像はインストール済みの状態)</figcaption>
+          </figure>
+          <div class="callout warn">「Chat for Claude Code」「Claude Code Assistant」など、<b>似た名前の別の拡張機能</b>が並んでいます。発行元が <b>Anthropic</b> であることを必ず確認してください。</div>
+        </li>
+        <li data-step="setup-open">
+          <h4>Claude Code を開く</h4>
+          <p>エディター右上に表示される<b>オレンジ色の ✳ アイコン</b>をクリックすると、Claude Code の画面が開きます。
+            画面右下のステータスバーにある「✳ Claude Code」からも開けます。
+            見つからない場合は <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> でコマンドパレットを開き、<code>Claude Code</code> と入力して表示されるコマンドから開きます。</p>
+        </li>
+        <li data-step="setup-login">
+          <h4>ログイン方法で「Anthropic Console」を選ぶ</h4>
+          <p>初回は「How do you want to log in?」(どの方法でログインしますか?)と聞かれます。
+            真ん中の<b>「Anthropic Console」</b>をクリックします。</p>
+          <figure class="shot" data-src="images/setup-login.png">
+            <figcaption>ログイン方法を選ぶ画面。真ん中の「Anthropic Console」を押す</figcaption>
+          </figure>
+          <div class="callout warn">一番上のオレンジ色の「Claude.ai Subscription」は、個人で Claude の有料プランに入っている人向けです。<b>この演習では選ばないでください。</b>「Bedrock, Foundry, or Vertex」も選びません。</div>
+          <div class="callout note">Claude Code の画面は<b>英語で表示</b>されます。分からない表示があっても、この手順書のとおりに進めれば大丈夫です。</div>
+        </li>
+        <li data-step="setup-browser">
+          <h4>ブラウザでメイジメールのアカウントで認証する</h4>
+          <p>「Code で外部の Web サイトを開きますか?」という確認が出たら<b>「開く」</b>を押します。ブラウザで Anthropic Console(platform.claude.com)のログイン画面が開くので、
+            <b>招待メールを受け取ったメイジメールのアドレス</b>でログインし、画面の指示に従って許可してください。
+            確認用のメールが届いた場合は、メイジメールで開いて手続きを進めます。</p>
+          <figure class="shot" data-src="images/setup-browser.png">
+            <figcaption>「開く」を押すとブラウザで認証画面が開く。右側は VS Code 側の「Continue in browser」画面</figcaption>
+          </figure>
+          <p>認証が終わったら VS Code に戻ります。自動でチャット画面に切り替わらない場合は、ブラウザに表示された<b>認証コード</b>をコピーし、
+            VS Code の「Or, paste your authorization code manually」の欄に貼り付けて「Continue」を押します。</p>
+          <div class="callout tip">ブラウザが開かなかったときは、「If the browser didn't open, visit this URL」の欄の右にあるボタンで URL をコピーし、ブラウザに貼り付けて開きます。</div>
+        </li>
+        <li data-step="setup-mode">
+          <h4>モード(どこまで自動で作業させるか)を確認する</h4>
+          <p>ログインするとチャット画面になります。入力欄の右下にあるモードの表示(例: 「Edit automatically」)をクリックすると、
+            Claude にどこまで自動で作業させるかを選べます。<kbd>Shift</kbd>+<kbd>Tab</kbd> でも切り替えられます。</p>
+          <figure class="shot" data-src="images/setup-mode.png">
+            <figcaption>モードの選択メニュー</figcaption>
+          </figure>
+          <table class="tips">
+            <tr><th>Manual</th><td>ファイルを編集するたびに許可を求めてくる。何をしているか1つずつ確かめたいときに。</td></tr>
+            <tr><th>Edit automatically</th><td>ファイルの編集は自動で行う。<b>この演習ではこれがおすすめ</b>です。</td></tr>
+            <tr><th>Plan</th><td>すぐに編集せず、まず計画を説明してくれる。大きな変更の前に。</td></tr>
+            <tr><th>Auto</th><td>安全チェックを通った操作は自動で許可し、危なそうなものだけ止まって確認する。</td></tr>
+            <tr><th>Bypass permissions</th><td>危険なコマンドも確認なしで実行する。初期設定では表示されないこともあります。<b>表示されていても、この演習では使わないでください。</b></td></tr>
+          </table>
+          <p><b>「Edit automatically」でも、プログラムの実行などファイル編集以外の操作</b>をするときは、Claude が「実行してよいですか?」と確認してきます。
+            内容を読んで問題なければ <b>Yes を選んで承認</b>します(キーボードの <kbd>y</kbd> でも承認できます)。
+            よく分からないときは承認せずに、「これは何をするコマンドですか?」と聞いてかまいません。</p>
+          <div class="callout note">メニュー下部の「Effort」「Ultracode」は変更せず、そのままにしておきます。最初に出る「Learn Claude Code」のパネルは、右上の × で閉じてかまいません。</div>
+        </li>
+        <li data-step="setup-check">
+          <h4>使える状態か確認する</h4>
+          <p>チャット欄に次のように入力して送信します。返事が返ってくれば準備完了です。</p>
+          <div class="prompt">こんにちは。あなたは何ができますか?初心者向けに短く教えてください。</div>
+        </li>
+        <li data-step="setup-japanese">
+          <h4>英語で返ってきたら、日本語で答えるよう頼む</h4>
+          <p>日本語で質問しても、<b>最初は英語で回答してくることがあります</b>。そのときは慌てずに、日本語で答えるように頼みましょう。</p>
+          <div class="prompt">これからは日本語で回答してください。</div>
+          <p>途中でまた英語に戻ったときも、同じように頼めば日本語に戻ります。</p>
+        </li>
+      </ol>
+
+      <details class="trouble">
+        <summary>うまくいかないとき</summary>
+        <ul>
+          <li><b>招待メールが見つからない:</b> メイジメールの迷惑メールフォルダを確認してください。それでも見つからなければ教員に連絡してください。</li>
+          <li><b>ログインできない:</b> 招待メールで招待を受け入れたか、<b>メイジメールのアドレス</b>でログインしているか(個人のメールアドレスになっていないか)を確認してください。ログイン方法で「Claude.ai Subscription」を選んでしまった場合は、Claude Code のチャット欄で <code>/logout</code> と送ってログアウトし、「Anthropic Console」でログインし直してください。</li>
+          <li><b>アイコンが出ない:</b> VS Code を再起動してみてください。拡張機能がインストール済みになっているかも確認しましょう。</li>
+          <li>それでも解決しないときは、表示されているメッセージを控えて教員に相談してください。</li>
+        </ul>
+      </details>
+    </section>
+
+    <!-- ===================== 2. 最初のWebアプリを作る ===================== -->
+    <section id="first-app">
+      <h2><span class="num">2</span>最初のWebアプリを作る</h2>
+      <p>作業用のフォルダを作り、Claude Code に最初の指示を出して、ブラウザで動かすところまで進めます。</p>
+
+      <ol class="steps">
+        <li data-step="first-folder">
+          <h4>作業用フォルダを作る</h4>
+          <p>エクスプローラー(Mac は Finder)で、アプリ用の新しいフォルダを作ります。例: <code>ドキュメント\webapp\my-first-app</code></p>
+          <div class="callout tip">フォルダ名は<b>半角英数字とハイフン</b>(例: <code>my-first-app</code>)にしておくと、後で公開するときに困りません。</div>
+        </li>
+        <li data-step="first-open">
+          <h4>VS Code でフォルダを開く</h4>
+          <p>VS Code のメニューから <b>ファイル → フォルダーを開く</b> を選び、作ったフォルダを開きます。</p>
+          <figure class="shot" data-src="images/first-open-folder.png">
+            <figcaption>「ファイル」メニューの「フォルダーを開く...」</figcaption>
+          </figure>
+          <div class="callout warn">Claude Code は<b>開いているフォルダの中</b>で作業します。必ず作業用フォルダを開いてから指示を出しましょう。</div>
+        </li>
+        <li data-step="first-trust">
+          <h4>フォルダを「信頼する」</h4>
+          <p>「このフォルダー内のファイルの作成者を信頼しますか?」と聞かれたら、自分で作ったフォルダなので「信頼する」を選びます。</p>
+          <p>画面上部に<b>「制限モードは、安全なコード参照のためのものです…」</b>という帯が出ている場合は、まだ信頼されていません。
+            帯の<b>「管理」</b>をクリックし、表示された画面で<b>「信頼する」</b>を押してください。</p>
+          <figure class="shot" data-src="images/first-trust-banner.png">
+            <figcaption>制限モードの帯。「管理」をクリックする</figcaption>
+          </figure>
+          <figure class="shot" data-src="images/first-trust.png">
+            <figcaption>「ワークスペースの信頼」画面。左側の青い「信頼する」を押す</figcaption>
+          </figure>
+          <div class="callout warn">制限モードのままだと、Claude Code などの拡張機能が使えなかったり、機能が制限されたりします。</div>
+        </li>
+        <li data-step="first-prompt">
+          <h4>Claude Code に最初の指示を出す</h4>
+          <p>Claude Code を開き、作りたいものを伝えます。最初は<b>小さく・シンプルに</b>頼むのがコツです。例:</p>
+          <div class="prompt">このフォルダに、ブラウザで遊べるシンプルな「もぐらたたき」ゲームを作ってください。index.html の1ファイルにまとめ、HTML・CSS・JavaScript はすべてこのファイルに入れてください。</div>
+          <p>ほかの例:</p>
+          <div class="prompt">今日やることを追加・完了・削除できるToDoリストのWebアプリを index.html 1ファイルで作ってください。データはブラウザに保存して、再読み込みしても消えないようにしてください。</div>
+          <div class="prompt">日本の都道府県の県庁所在地を当てる4択クイズを index.html 1ファイルで作ってください。10問出題して最後に正解数を表示してください。</div>
+        </li>
+        <li data-step="first-permission">
+          <h4>許可を求められたら内容を読んで答える</h4>
+          <p>Claude Code はコマンドを実行するときなどに、<b>許可を求めてきます</b>(どの操作で聞いてくるかは、1章で選んだモードによって変わります)。何をしようとしているかを読み、問題なければ許可します。
+            分からないときは許可せずに「これは何をするコマンドですか?」と質問してかまいません。</p>
+        </li>
+        <li data-step="first-run">
+          <h4>ブラウザで動かす</h4>
+          <p>できあがった <code>index.html</code> をエクスプローラーでダブルクリックすると、ブラウザで開きます。Claude Code に頼んでもかまいません。</p>
+          <div class="prompt">index.html をブラウザで開いてください。</div>
+          <p>実際に操作して、思ったとおりに動くか確かめましょう。</p>
+        </li>
+        <li data-step="first-explain">
+          <h4>何が作られたか説明してもらう</h4>
+          <div class="prompt">今作ったコードの構成と仕組みを、プログラミング初心者向けに説明してください。</div>
+        </li>
+      </ol>
+
+      <h3>伝わりやすい指示のコツ</h3>
+      <table class="tips">
+        <tr><th>何を</th><td>どんなアプリか(ゲーム、ToDo、クイズ…)</td></tr>
+        <tr><th>どんな画面・動き</th><td>ボタンの配置、色の雰囲気、クリックしたら何が起きるか</td></tr>
+        <tr><th>ファイル構成</th><td>「index.html の1ファイルで」など。最初は1ファイルが分かりやすい</td></tr>
+        <tr><th>条件・制約</th><td>「スマホでも見やすく」「外部のライブラリは使わない」など</td></tr>
+      </table>
+    </section>
+
+    <!-- ===================== 3. AIと対話しながら改良する ===================== -->
+    <section id="improve">
+      <h2><span class="num">3</span>AIと対話しながら改良する</h2>
+      <p>動くものができたら、遊んでみて気づいたことを伝え、少しずつ改良します。<b>1回に頼むことは1つか2つ</b>にして、そのたびに動作を確認するのがコツです。</p>
+
+      <ol class="steps">
+        <li data-step="improve-feature">
+          <h4>機能を追加する</h4>
+          <div class="prompt">スコアが10点上がるごとに、もぐらが出てくる速さを少しずつ上げてください。</div>
+          <div class="prompt">ゲーム終了時に、これまでの最高得点も表示されるようにしてください。</div>
+        </li>
+        <li data-step="improve-design">
+          <h4>画面のデザインを変える</h4>
+          <div class="prompt">全体をやわらかいパステルカラーにして、ボタンを角丸で大きくしてください。スマホの画面幅でも見やすいレイアウトにしてください。</div>
+        </li>
+        <li data-step="improve-bug">
+          <h4>バグを直す</h4>
+          <p>「<b>何をしたら</b>」「<b>何が起きたか</b>」「<b>本当はどうなってほしいか</b>」の3点を伝えます。</p>
+          <div class="prompt">スタートボタンを2回続けて押すと、もぐらが2倍の速さで出てきてしまいます。ゲーム中はスタートボタンを押せないようにしてください。</div>
+        </li>
+      </ol>
+
+      <h3>思いどおりに動かなかったときの対処方法</h3>
+      <ol class="steps">
+        <li data-step="trouble-detail">
+          <h4>症状を具体的に伝える</h4>
+          <p>「動きません」だけでは AI も原因を絞れません。どの操作で、どうなったかを書きましょう。</p>
+        </li>
+        <li data-step="trouble-console">
+          <h4>エラーメッセージを見せる</h4>
+          <p>ブラウザで <kbd>F12</kbd> を押して開発者ツールを開き、<b>Console(コンソール)</b>タブに赤い文字が出ていたら、コピーして Claude Code に貼り付けます。</p>
+          <div class="prompt">ボタンを押しても何も起きません。ブラウザのコンソールに次のエラーが出ています: (ここにエラーを貼り付け)</div>
+        </li>
+        <li data-step="trouble-screenshot">
+          <h4>画面のスクリーンショットを見せる</h4>
+          <p>表示の崩れなど言葉で説明しにくいときは、スクリーンショットを撮って(Windows は <kbd>Win</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>)チャット欄に貼り付けると伝わりやすくなります。</p>
+        </li>
+        <li data-step="trouble-reload">
+          <h4>再読み込みを忘れない</h4>
+          <p>修正したのに変わらないときは、ブラウザで <kbd>Ctrl</kbd>+<kbd>F5</kbd>(Mac は <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd>)を押して再読み込みしてみましょう。</p>
+        </li>
+        <li data-step="trouble-cause">
+          <h4>原因を一緒に調べてもらう</h4>
+          <div class="prompt">同じ不具合が直りません。考えられる原因の候補を挙げて、1つずつ確認しながら直してください。</div>
+        </li>
+        <li data-step="trouble-revert">
+          <h4>悪くなったら元に戻す</h4>
+          <p>修正でかえって悪くなったら、元に戻すよう頼めます。<b>うまく動いている段階でフォルダごとコピーしてバックアップ</b>しておくと安心です。</p>
+          <div class="prompt">さっきの変更で、かえって動かなくなりました。直前の変更を元に戻してください。</div>
+        </li>
+        <li data-step="trouble-new">
+          <h4>会話をリセットする</h4>
+          <p>やりとりが長くなって話がかみ合わなくなったら、新しい会話を始め、今のアプリの状態と次にやりたいことを改めて説明すると、うまくいくことがあります。</p>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ===================== 4. GitHub Pagesで公開する ===================== -->
+    <section id="publish">
+      <h2><span class="num">4</span>GitHub Pagesで公開する <span class="badge">発展課題</span></h2>
+      <p>作ったアプリをインターネットに公開し、URL を知っている人なら誰でもスマホやPCから遊べるようにします。</p>
+
+      <div class="callout warn">
+        <b>公開すると誰でも見られます。</b>名前・学籍番号・パスワードなどの個人情報や、他人の画像・音楽などを含めないでください。
+      </div>
+
+      <ol class="steps">
+        <li data-step="pub-account">
+          <h4>GitHub アカウントを作る</h4>
+          <p><a href="https://github.com/" target="_blank" rel="noopener">github.com</a> で「Sign up」からアカウントを作成します。<b>ユーザー名は公開URLの一部になります</b>。</p>
+        </li>
+        <li data-step="pub-git">
+          <h4>Git が使えるか確認する</h4>
+          <div class="prompt">このPCに git がインストールされているか確認してください。入っていなければインストール方法を教えてください。</div>
+        </li>
+        <li data-step="pub-repo">
+          <h4>GitHub にリポジトリを作る</h4>
+          <p>GitHub にログインし、右上の「+」→「New repository」を選びます。
+            Repository name に作業フォルダと同じ名前(例: <code>my-first-app</code>)を入れ、<b>Public</b> を選んで「Create repository」を押します。</p>
+        </li>
+        <li data-step="pub-push">
+          <h4>リポジトリに push する</h4>
+          <p>作ったファイルを GitHub に送ります(push)。Claude Code に頼みましょう。ユーザー名の部分は自分のものに置き換えます。</p>
+          <div class="prompt">このフォルダを git で管理して、GitHub の https://github.com/ユーザー名/my-first-app に push してください。初めてなので、各手順で何をしているか説明しながら進めてください。</div>
+          <p>途中で GitHub へのログインや名前・メールアドレスの設定を求められたら、画面の指示に従います。</p>
+        </li>
+        <li data-step="pub-pages">
+          <h4>GitHub Pages を有効にする</h4>
+          <p>GitHub のリポジトリのページで <b>Settings → Pages</b> を開きます。
+            「Build and deployment」の Source を <b>Deploy from a branch</b>、Branch を <b>main</b> と <b>/(root)</b> にして「Save」を押します。</p>
+        </li>
+        <li data-step="pub-open">
+          <h4>公開されたページを開く</h4>
+          <p>数分待つと、次のURLで公開されます。<code>index.html</code> がトップページになります。</p>
+          <p class="url">https://<b>ユーザー名</b>.github.io/<b>my-first-app</b>/</p>
+        </li>
+        <li data-step="pub-update">
+          <h4>更新する</h4>
+          <p>アプリを改良したら、変更を GitHub に送ります。数分で公開ページにも反映されます。</p>
+          <div class="prompt">今の変更をコミットして GitHub に push してください。</div>
+        </li>
+      </ol>
+
+      <details class="trouble">
+        <summary>注意点</summary>
+        <ul>
+          <li>GitHub Pages で公開できるのは HTML・CSS・JavaScript などの<b>ファイルだけ</b>です。Python などで動かすサーバーの機能(例: 作例の game の対局記録の保存)は動きません。</li>
+          <li>ページが表示されないときは、数分待ってから再読み込みしてください。リポジトリの <b>Actions</b> タブで公開処理の状況を確認できます。</li>
+        </ul>
+      </details>
+
+      <div class="finish">おつかれさまでした!🎉 作ったアプリを友だちに見せて、感想をもらってみましょう。</div>
+    </section>
+  </main>
+</div>
+
+<div id="toast" class="toast">コピーしました</div>
+<script src="script.js"></script>
+</body>
+</html>

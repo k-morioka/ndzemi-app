@@ -19,7 +19,8 @@ from pathlib import Path
 
 BASE = Path(__file__).resolve().parent
 RECORDS = BASE / 'records'
-STATIC = {'/': 'index.html', '/index.html': 'index.html', '/tetris.html': 'tetris.html'}
+STATIC = {'/': 'index.html', '/index.html': 'index.html', '/tetris.html': 'tetris.html', '/config.js': 'config.js'}
+CONTENT_TYPES = {'.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8'}
 ID_RE = re.compile(r'^[0-9]{8}-[0-9]{6}-[0-9a-f]{6}$')
 MAX_BODY = 1024 * 1024
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8765
@@ -61,7 +62,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json(404, {'error': 'not found'})
             body = file.read_bytes()
             self.send_response(200)
-            self.send_header('Content-Type', 'text/html; charset=utf-8')
+            self.send_header('Content-Type', CONTENT_TYPES[file.suffix])
             self.send_header('Content-Length', str(len(body)))
             self.send_header('Cache-Control', 'no-store')
             self.end_headers()

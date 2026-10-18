@@ -297,43 +297,88 @@
           <h4>GitHub アカウントを作る</h4>
           <p><a href="https://github.com/" target="_blank" rel="noopener">github.com</a> で「Sign up」からアカウントを作成します。<b>ユーザー名は公開URLの一部になります</b>。</p>
         </li>
-        <li data-step="pub-git">
-          <h4>Git が使えるか確認する</h4>
-          <div class="prompt">このPCに git がインストールされているか確認してください。入っていなければインストール方法を教えてください。</div>
-        </li>
         <li data-step="pub-repo">
-          <h4>GitHub にリポジトリを作る</h4>
-          <p>GitHub にログインし、右上の「+」→「New repository」を選びます。
-            Repository name に作業フォルダと同じ名前(例: <code>my-first-app</code>)を入れ、<b>Public</b> を選んで「Create repository」を押します。</p>
+          <h4>GitHub にリポジトリ(保存場所)を作る</h4>
+          <p>GitHub にログインし、画面右上の<b>「+」→「New repository」</b>を選びます。</p>
+          <figure class="shot" data-src="images/pub-new-menu.png">
+            <figcaption>右上の「+」メニューから「New repository」</figcaption>
+          </figure>
+          <p>「Create a new repository」の画面で、次のように入力して<b>「Create repository」</b>を押します。</p>
+          <table class="tips">
+            <tr><th>Repository name</th><td>作業フォルダと同じ名前(例: <code>my-first-app</code>)。「is available.」と緑で出れば使える名前です。</td></tr>
+            <tr><th>Choose visibility</th><td><b>Public</b>(無料プランで GitHub Pages を使うには Public が必要です)</td></tr>
+            <tr><th>Add README など</th><td><b>Off / No .gitignore / No license のまま</b>にします。空のリポジトリにしておくと、手元のファイルをそのまま送れます。</td></tr>
+          </table>
+          <figure class="shot" data-src="images/pub-repo-form.png">
+            <figcaption>リポジトリの作成画面。名前を入れ、Public のまま「Create repository」</figcaption>
+          </figure>
+        </li>
+        <li data-step="pub-git">
+          <h4>Git が使えるか確認する(なければ入れてもらう)</h4>
+          <p>Git はファイルの変更履歴を記録するツールで、GitHub にファイルを送るときに使います。Claude Code に確認してもらいましょう。</p>
+          <div class="prompt">このPCに git がインストールされているか確認してください。入っていなければインストールしてください。</div>
+          <p>入っていない場合、Claude Code が<b>インストール方法を選択肢で質問</b>してくることがあります。おすすめ(Recommended)を選んで「Submit answers」を押せば、Claude が入れてくれます。
+            途中で Windows の「このアプリがデバイスに変更を加えることを許可しますか?」という確認が出たら「はい」を押します。</p>
+          <figure class="shot" data-src="images/pub-git-install.png">
+            <figcaption>Claude Code からの質問の例。選択肢を選んで答える</figcaption>
+          </figure>
         </li>
         <li data-step="pub-push">
           <h4>リポジトリに push する</h4>
           <p>作ったファイルを GitHub に送ります(push)。Claude Code に頼みましょう。ユーザー名の部分は自分のものに置き換えます。</p>
           <div class="prompt">このフォルダを git で管理して、GitHub の https://github.com/ユーザー名/my-first-app に push してください。初めてなので、各手順で何をしているか説明しながら進めてください。</div>
-          <p>途中で GitHub へのログインや名前・メールアドレスの設定を求められたら、画面の指示に従います。</p>
+          <p>Claude Code は次のような順番で作業します。説明を読みながら、聞かれたことに答えていきましょう。</p>
+          <ol class="substeps">
+            <li><b>名前とメールアドレスの設定</b>: 変更の記録(コミット)に残る作者情報です。Public のリポジトリでは<b>誰でも見られる</b>ので、公開してよいものを選びます。</li>
+            <li><b>git init</b>: このフォルダを Git で管理し始めます。</li>
+            <li><b>コミット</b>: 今のファイルを最初の記録として保存します。</li>
+            <li><b>push</b>: 記録を GitHub に送ります。</li>
+          </ol>
+        </li>
+        <li data-step="pub-login">
+          <h4>GitHub へのログインを許可する</h4>
+          <p>初めて push するときは、GitHub へのログインを求められます。「Connect to GitHub」という画面が出たら<b>「Sign in with your browser」</b>を押し、
+            ブラウザで自分の GitHub アカウントにログインします。「Authorize Git Credential Manager」と表示されたら、緑の<b>「Authorize git-ecosystem」</b>を押して許可します。</p>
+          <figure class="shot" data-src="images/pub-authorize.png">
+            <figcaption>Git Credential Manager の許可画面。緑のボタンで許可する</figcaption>
+          </figure>
+          <p>許可は1回だけで、次からは自動でログインされます。Claude Code が「main -&gt; main」のような結果を表示すれば push 成功です。</p>
+          <div class="callout tip">Claude Code が「ログイン画面を表示できないので push できない」と言ってきたら、次のように頼んでみましょう。それでも出ないときは、VS Code の<b>ターミナル → 新しいターミナル</b>で <code>git push -u origin main</code> を自分で実行します。</div>
+          <div class="prompt">GitHub のログイン画面が表示されるようにして、もう一度 push してください。</div>
         </li>
         <li data-step="pub-pages">
           <h4>GitHub Pages を有効にする</h4>
-          <p>GitHub のリポジトリのページで <b>Settings → Pages</b> を開きます。
-            「Build and deployment」の Source を <b>Deploy from a branch</b>、Branch を <b>main</b> と <b>/(root)</b> にして「Save」を押します。</p>
+          <p>GitHub のリポジトリのページを開き、上のタブの<b>「Settings」</b>→ 左側メニューの<b>「Pages」</b>を開きます。
+            「Build and deployment」の Source が <b>Deploy from a branch</b> になっていることを確認します。</p>
+          <figure class="shot" data-src="images/pub-pages-none.png">
+            <figcaption>最初は Branch が「None」で、Pages は無効になっている</figcaption>
+          </figure>
+          <p>Branch の「None」をクリックして <b>main</b> を選ぶと、右にフォルダ <b>/(root)</b> が表示されます。そのまま<b>「Save」</b>を押します。</p>
+          <figure class="shot" data-src="images/pub-pages-branch.png">
+            <figcaption>Branch を「main」「/(root)」にして「Save」</figcaption>
+          </figure>
+          <div class="callout note">下にある「Visibility」(GitHub Enterprise)や「Start free for 30 days」は有料プラン向けの機能です。押さなくてかまいません。</div>
         </li>
         <li data-step="pub-open">
           <h4>公開されたページを開く</h4>
-          <p>数分待つと、次のURLで公開されます。<code>index.html</code> がトップページになります。</p>
+          <p>数分待つと、次のURLで公開されます。Settings → Pages の画面を再読み込みすると、上部に公開URLが表示されます。<code>index.html</code> がトップページになります。</p>
           <p class="url">https://<b>ユーザー名</b>.github.io/<b>my-first-app</b>/</p>
+          <div class="callout tip">フォルダの中にある index.html は、<code>…/my-first-app/フォルダ名/</code> のように URL の後ろにフォルダ名を付けると開けます。</div>
         </li>
         <li data-step="pub-update">
           <h4>更新する</h4>
           <p>アプリを改良したら、変更を GitHub に送ります。数分で公開ページにも反映されます。</p>
-          <div class="prompt">今の変更をコミットして GitHub に push してください。</div>
+          <div class="prompt">今の変更をコミットして GitHub に push してください。公開アドレスをブラウザで開いてください。</div>
         </li>
       </ol>
 
       <details class="trouble">
-        <summary>注意点</summary>
+        <summary>注意点・うまくいかないとき</summary>
         <ul>
           <li>GitHub Pages で公開できるのは HTML・CSS・JavaScript などの<b>ファイルだけ</b>です。Python などで動かすサーバーの機能(例: 作例の game の対局記録の保存)は動きません。</li>
-          <li>ページが表示されないときは、数分待ってから再読み込みしてください。リポジトリの <b>Actions</b> タブで公開処理の状況を確認できます。</li>
+          <li>ページが表示されない(404 になる)ときは、数分待ってから再読み込みしてください。リポジトリの <b>Actions</b> タブで公開処理の状況を確認できます。</li>
+          <li>Git をインストールした直後は、すでに開いていたターミナルでは <code>git</code> が見つからないことがあります。新しいターミナルを開くか、VS Code を再起動してください。</li>
+          <li>push でエラーが出たら、表示されたメッセージをそのまま Claude Code に伝えて「どうすればよいですか?」と聞きましょう。</li>
         </ul>
       </details>
 

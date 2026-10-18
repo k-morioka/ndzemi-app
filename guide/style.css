@@ -97,6 +97,8 @@ h3 { font-size: 19px; margin: 28px 0 8px; padding-left: 10px; border-left: 4px s
 .steps > li.checked::before { content: "✓"; background: #2f9e44; color: #fff; }
 .steps h4 { margin: 2px 0 6px; font-size: 16px; padding-right: 90px; }
 .steps p { margin: 6px 0; }
+.substeps { margin: 6px 0; padding-left: 22px; font-size: 14px; }
+.substeps li { margin: 2px 0; }
 .check {
   position: absolute; right: 14px; top: 12px; font-size: 13px; color: var(--muted);
   display: flex; align-items: center; gap: 4px; cursor: pointer; user-select: none;

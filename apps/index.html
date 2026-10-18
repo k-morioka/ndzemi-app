@@ -33,6 +33,7 @@
   .tile .body { padding: 10px 14px 12px; }
   .tile h2 { margin: 0; font-size: 16px; line-height: 1.5; word-break: break-word; }
   .tile .author { color: var(--muted); font-size: 13px; }
+  .tile .date { color: #a59d93; font-size: 12px; }
 
   /* ---- 登録ダイアログ ---- */
   dialog { border: none; border-radius: 12px; padding: 0; width: min(520px, 94vw); box-shadow: 0 10px 40px rgba(0,0,0,0.25); }
@@ -124,6 +125,16 @@ function safeUrl(s) {
 }
 const safeImage = s => /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(s || '') ? s : '';
 
+// 日時を「2026/10/18 22:17」の形にそろえる(読み取れない形ならそのまま表示)
+function formatTime(s) {
+  if (!s) return '';
+  if (/^\d{4}\/\d{2}\/\d{2} \d{2}:\d{2}/.test(s)) return s;
+  const d = new Date(String(s).replace(/\s*\(.*\)\s*$/, '')); // 末尾の「(日本標準時)」などを外して読む
+  if (isNaN(d)) return String(s);
+  const p = v => String(v).padStart(2, '0');
+  return `${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
 // 画像がないアプリは、アプリ名から決まる色と頭文字で代わりのタイルを作る
 function colorFor(text) {
   let h = 0;
@@ -162,7 +173,8 @@ function render() {
     body.className = 'body';
     const h = document.createElement('h2'); h.textContent = a.name;
     const au = document.createElement('div'); au.className = 'author'; au.textContent = `作: ${a.author}`;
-    body.append(h, au);
+    const t = document.createElement('div'); t.className = 'date'; t.textContent = a.time ? `更新: ${formatTime(a.time)}` : '';
+    body.append(h, au, t);
     tile.append(thumb, body);
     listEl.appendChild(tile);
   }

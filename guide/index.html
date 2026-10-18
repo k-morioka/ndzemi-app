@@ -129,6 +129,21 @@
             VS Code の「Or, paste your authorization code manually」の欄に貼り付けて「Continue」を押します。</p>
           <div class="callout tip">ブラウザが開かなかったときは、「If the browser didn't open, visit this URL」の欄の右にあるボタンで URL をコピーし、ブラウザに貼り付けて開きます。</div>
         </li>
+        <li data-step="setup-model">
+          <h4>モデル(どの AI を使うか)を「Sonnet」にする</h4>
+          <p>Claude にはいくつかの種類(<b>モデル</b>)があり、賢さ・速さ・利用料金が違います。入力欄の左下に表示されているモデル名(例: 「Opus 5.5 Medium」)をクリックすると、モデルを選ぶメニューが開きます。</p>
+          <figure class="shot" data-src="images/setup-model.png">
+            <figcaption>モデルの選択メニュー。「Sonnet」を選ぶ</figcaption>
+          </figure>
+          <p>この演習では<b>「Sonnet」</b>を選んでください。Webアプリ作りには十分な性能があり、使った分の料金(画面の「$2/$10 per Mtok」の部分)が Opus の半分で済みます。</p>
+          <table class="tips">
+            <tr><th>Sonnet</th><td><b>この演習ではこれを使います。</b>普段の作業に向いた、性能と料金のバランスがよいモデル。</td></tr>
+            <tr><th>Default / Opus</th><td>Sonnet より高性能ですが、料金が高めです。Sonnet で何度頼んでもうまくいかないときだけ、試しに切り替えてみます。</td></tr>
+            <tr><th>Fable</th><td>最も高性能で、料金も最も高いモデル。<b>この演習では使わないでください。</b></td></tr>
+            <tr><th>Haiku</th><td>最も速く安いモデル。簡単な質問には向きますが、アプリ作りには力不足なことがあります。</td></tr>
+          </table>
+          <div class="callout note">選んだモデルは入力欄の左下に表示されます。新しい会話を始めたときなどに Sonnet 以外に戻っていたら、選び直してください。「Effort」や「Ultracode」は変更せず、そのままにしておきます。</div>
+        </li>
         <li data-step="setup-mode">
           <h4>モード(どこまで自動で作業させるか)を確認する</h4>
           <p>ログインするとチャット画面になります。入力欄の右下にあるモードの表示(例: 「Edit automatically」)をクリックすると、

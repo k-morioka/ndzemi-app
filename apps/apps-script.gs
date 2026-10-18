@@ -49,7 +49,8 @@ function doGet() {
   const apps = values
     .filter(r => r[3])
     .map(r => ({
-      time: r[0] instanceof Date ? Utilities.formatDate(r[0], tz, 'yyyy/MM/dd HH:mm') : String(r[0]),
+      // Apps Script では instanceof Date が効かないことがあるので、getTime の有無で日付か判定する
+      time: r[0] && typeof r[0].getTime === 'function' ? Utilities.formatDate(r[0], tz, 'yyyy/MM/dd HH:mm') : String(r[0]),
       author: String(r[1]),
       name: String(r[2]),
       url: String(r[3]),

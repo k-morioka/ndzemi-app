@@ -139,6 +139,11 @@ table.tips { border-collapse: collapse; width: 100%; background: #fff; }
 table.tips th, table.tips td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; }
 table.tips th { background: #f5f2ee; width: 160px; white-space: nowrap; }
 .url { font-family: Consolas, monospace; background: #fff; border: 1px dashed var(--line); padding: 8px 12px; border-radius: 6px; }
+.open-apps {
+  display: inline-block; background: var(--accent); color: #fff; text-decoration: none; font-weight: bold;
+  padding: 8px 18px; border-radius: 6px;
+}
+.open-apps:hover { opacity: 0.9; }
 .finish { margin-top: 24px; padding: 16px; text-align: center; background: var(--accent-soft); border-radius: 10px; font-size: 17px; }
 
 .toast {

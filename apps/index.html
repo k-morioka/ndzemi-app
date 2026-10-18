@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>みんなのWebアプリ一覧</title>
+<style>
+  :root { --accent: #d97757; --text: #2b2b2b; --muted: #6b6b6b; --line: #e5e1dc; --bg: #faf8f5; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.7;
+         font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif; }
+  header { background: #fff; border-bottom: 1px solid var(--line); padding: 20px 24px; }
+  header .inner, main { max-width: 1080px; margin: 0 auto; }
+  h1 { margin: 0 0 4px; font-size: 24px; }
+  header p { margin: 0; color: var(--muted); font-size: 14px; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
+  .btn { display: inline-block; background: var(--accent); color: #fff; text-decoration: none; font-weight: bold;
+         padding: 8px 18px; border-radius: 6px; border: none; font-size: 15px; cursor: pointer; }
+  .btn.secondary { background: #fff; color: var(--text); border: 1px solid var(--line); font-weight: normal; }
+  .btn[aria-disabled="true"] { background: #ccc; pointer-events: none; }
+  #search { flex: 1 1 220px; max-width: 320px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; font-size: 14px; }
+  main { padding: 20px 24px 60px; }
+  #status { color: var(--muted); font-size: 14px; margin: 0 0 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px;
+          display: flex; flex-direction: column; gap: 6px; }
+  .card h2 { margin: 0; font-size: 18px; word-break: break-word; }
+  .card .author { color: var(--muted); font-size: 13px; }
+  .card .desc { font-size: 14px; flex: 1; white-space: pre-wrap; word-break: break-word; }
+  .card .open { align-self: flex-start; margin-top: 6px; }
+  .card .date { color: #a59d93; font-size: 12px; }
+  .notice { background: #fff4e5; border-left: 4px solid #e8a33d; padding: 12px 16px; border-radius: 8px; font-size: 14px; }
+  footer { text-align: center; font-size: 13px; color: var(--muted); padding-bottom: 30px; }
+  footer a { color: #b4532f; }
+</style>
+</head>
+<body>
+<header>
+  <div class="inner">
+    <h1>みんなのWebアプリ一覧</h1>
+    <p>Claude Code への指示で作ったWebアプリを紹介します。カードの「開く」で別タブでアプリが開きます。</p>
+    <div class="toolbar">
+      <a id="registerBtn" class="btn" href="#" target="_blank" rel="noopener" aria-disabled="true">＋ 自分のアプリを登録する</a>
+      <button id="reloadBtn" class="btn secondary" type="button">最新の一覧を読み込む</button>
+      <input id="search" type="search" placeholder="アプリ名・ニックネームで絞り込み">
+    </div>
+  </div>
+</header>
+
+<main>
+  <p id="status">読み込み中…</p>
+  <div id="list" class="grid"></div>
+</main>
+
+<footer><a href="../guide/" target="_blank" rel="noopener">演習の手順書(guide)はこちら</a></footer>
+
+<script src="config.js"></script>
+<script>
+const cfg = window.APPS_CONFIG || {};
+const statusEl = document.getElementById('status');
+const listEl = document.getElementById('list');
+const searchEl = document.getElementById('search');
+let apps = [];
+
+// 登録ボタン(フォームが設定されていれば有効にする)
+const registerBtn = document.getElementById('registerBtn');
+if (cfg.FORM_URL) {
+  registerBtn.href = cfg.FORM_URL;
+  registerBtn.removeAttribute('aria-disabled');
+}
+
+// CSV を行・列の配列に変換する(ダブルクォート内のカンマ・改行にも対応)
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"' && text[i + 1] === '"') { field += '"'; i++; }
+      else if (ch === '"') inQuotes = false;
+      else field += ch;
+    } else if (ch === '"') inQuotes = true;
+    else if (ch === ',') { row.push(field); field = ''; }
+    else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && text[i + 1] === '\n') i++;
+      row.push(field); rows.push(row); row = []; field = '';
+    } else field += ch;
+  }
+  if (field !== '' || row.length) { row.push(field); rows.push(row); }
+  return rows.filter(r => r.some(c => c.trim() !== ''));
+}
+
+// 見出しに含まれる言葉から列を探す(フォームの質問の順番が変わっても動くように)
+function findCol(header, words) {
+  return header.findIndex(h => words.some(w => h.includes(w)));
+}
+
+// 安全のため、http(s) の URL だけをリンクにする
+function safeUrl(s) {
+  try {
+    const u = new URL(s.trim());
+    return (u.protocol === 'https:' || u.protocol === 'http:') ? u.href : null;
+  } catch (e) { return null; }
+}
+
+function toApps(rows) {
+  const [header, ...body] = rows;
+  const col = {
+    time: findCol(header, ['タイムスタンプ', 'Timestamp']),
+    name: findCol(header, ['アプリ名']),
+    author: findCol(header, ['ニックネーム', '作者']),
+    url: findCol(header, ['URL', 'url']),
+    desc: findCol(header, ['説明', 'ひとこと']),
+  };
+  const get = (r, i) => (i >= 0 && r[i] ? r[i].trim() : '');
+  const byUrl = new Map(); // 同じ URL が何度も登録されたら最新のものだけ残す
+  for (const r of body) {
+    const url = safeUrl(get(r, col.url));
+    if (!url) continue;
+    byUrl.delete(url); // 上書きだけだと並び順が最初の登録位置のままになるので、消してから入れ直す
+    byUrl.set(url, { time: get(r, col.time), name: get(r, col.name) || '(名前なし)', author: get(r, col.author), url, desc: get(r, col.desc) });
+  }
+  return [...byUrl.values()].reverse(); // 新しい登録を先頭に
+}
+
+function render() {
+  const q = searchEl.value.trim().toLowerCase();
+  const shown = apps.filter(a => !q || (a.name + ' ' + a.author).toLowerCase().includes(q));
+  listEl.innerHTML = '';
+  for (const a of shown) {
+    // 学生の入力をそのまま表示するので、innerHTML ではなく textContent を使う
+    const card = document.createElement('div');
+    card.className = 'card';
+    const h = document.createElement('h2'); h.textContent = a.name;
+    const au = document.createElement('div'); au.className = 'author'; au.textContent = a.author ? `作: ${a.author}` : '';
+    const d = document.createElement('div'); d.className = 'desc'; d.textContent = a.desc;
+    const link = document.createElement('a');
+    link.className = 'btn open'; link.href = a.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = '開く';
+    const t = document.createElement('div'); t.className = 'date'; t.textContent = a.time ? `登録: ${a.time}` : '';
+    card.append(h, au, d, link, t);
+    listEl.appendChild(card);
+  }
+  statusEl.textContent = apps.length === 0 ? 'まだ登録されたアプリはありません。最初の登録者になりましょう!'
+    : `${apps.length} 件のアプリが登録されています${q ? `(絞り込み: ${shown.length} 件)` : ''}`;
+}
+
+function load() {
+  if (!cfg.CSV_URL) {
+    statusEl.innerHTML = '';
+    const n = document.createElement('div');
+    n.className = 'notice';
+    n.textContent = 'アプリ一覧は準備中です。登録の受け付けが始まるまでお待ちください。';
+    statusEl.appendChild(n);
+    return;
+  }
+  statusEl.textContent = '読み込み中…';
+  // キャッシュされた古い一覧を避けるため、毎回違うパラメータを付ける
+  const sep = cfg.CSV_URL.includes('?') ? '&' : '?';
+  fetch(`${cfg.CSV_URL}${sep}t=${Date.now()}`)
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+    .then(text => { apps = toApps(parseCSV(text)); render(); })
+    .catch(() => { statusEl.textContent = '一覧を読み込めませんでした。しばらくしてから「最新の一覧を読み込む」を押してください。'; });
+}
+
+document.getElementById('reloadBtn').addEventListener('click', load);
+searchEl.addEventListener('input', render);
+load();
+</script>
+</body>
+</html>

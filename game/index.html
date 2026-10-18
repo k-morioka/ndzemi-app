@@ -323,7 +323,10 @@ function getJson(r) {
 const recordsApi = RECORDS_API ? {
   // Content-Type を text/plain にすると、Apps Script でも受け付けられる形で送信できる
   save: rec => fetch(RECORDS_API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'saveRecord', record: rec }) })
-    .then(getJson).then(d => { if (!d.ok) throw new Error(d.error); return d; }),
+    .then(getJson).then(d => {
+      if (!d.ok) { const err = new Error(d.error || ''); err.fromServer = true; throw err; }
+      return d;
+    }),
   list: () => fetch(`${RECORDS_API}?action=records&t=${Date.now()}`)
     .then(getJson).then(d => { if (!d.ok || !Array.isArray(d.records)) throw new Error(); return d.records; }),
   get: id => fetch(`${RECORDS_API}?action=record&id=${encodeURIComponent(id)}&t=${Date.now()}`)
@@ -338,7 +341,8 @@ const RECORDS_HELP = RECORDS_API ? '(通信状態を確認して、しばらく�
 function saveRecordToServer(rec) {
   recordsApi.save(rec)
     .then(() => setMsg('対局記録を保存しました'))
-    .catch(() => setMsg('対局記録を保存できませんでした' + RECORDS_HELP));
+    // 保存先から理由が返ってきた場合は、原因を調べやすいようにその理由も表示する
+    .catch(err => setMsg('対局記録を保存できませんでした' + (err.fromServer && err.message ? `: ${err.message}` : RECORDS_HELP)));
 }
 
 function place(ox, oy) {

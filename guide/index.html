@@ -39,6 +39,15 @@
         <b>AIへの指示</b>と<b>動作確認・改良</b>を重視します。
       </p>
 
+      <details class="trouble">
+        <summary>補足: プログラミングの進化</summary>
+        <p>プログラムを書く方法は、機械語、アセンブリ言語、高級言語へと、人が分かりやすく書ける形に変わってきました。今は生成AIに、ふだんの言葉で作りたいものを伝える方法もあります。</p>
+        <figure class="shot" data-src="images/programming-evolution.png">
+          <figcaption>プログラミングの進化。画像をクリックすると大きく表示できます。</figcaption>
+        </figure>
+        <p>どの方法でも、コンピューターが最後に実行するのは機械語です。AIに作ってもらったプログラムも、<b>自分で動かして、思いどおりか確かめること</b>が大切です。</p>
+      </details>
+
       <h3>この演習で身につけたいこと</h3>
       <div class="cycle">
         <div class="cycle-step">① 指示する<small>何を作りたいかを言葉で伝える</small></div>
@@ -414,7 +423,7 @@
       <details class="trouble">
         <summary>注意点・うまくいかないとき</summary>
         <ul>
-          <li>GitHub Pages で公開できるのは HTML・CSS・JavaScript などの<b>ファイルだけ</b>です。Python などで動かすサーバーの機能(例: 作例の game の対局記録の保存)は動きません。サーバーの機能も公開したい場合は、下の「サーバーの機能も公開したいとき」を見てください。</li>
+          <li>GitHub Pages で公開できるのは HTML・CSS・JavaScript などの<b>ファイルだけ</b>です。Python などで動かすサーバーの機能は、GitHub Pages 上では動きません。作例の game は、対局記録を保存するために別のサービス(Google Apps Script)を使っています。サーバーの機能も公開したい場合は、下の「サーバーの機能も公開したいとき」を見てください。</li>
           <li>ページが表示されない(404 になる)ときは、数分待ってから再読み込みしてください。リポジトリの <b>Actions</b> タブで公開処理の状況を確認できます。</li>
           <li>Git をインストールした直後は、すでに開いていたターミナルでは <code>git</code> が見つからないことがあります。新しいターミナルを開くか、VS Code を再起動してください。</li>
           <li>push でエラーが出たら、表示されたメッセージをそのまま Claude Code に伝えて「どうすればよいですか?」と聞きましょう。</li>

@@ -342,6 +342,10 @@ const RECORDS_CACHE_MAX_AGE = 10 * 60 * 1000;
 let cachedRecordList = null;
 let cachedRecordListAt = 0;
 let recordsListRequest = 0;
+// 公開サイトの控えを先に読み、初回の対局記録メニューを早く表示する
+const recordSnapshot = RECORDS_API ? fetch('records-snapshot.json')
+  .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+  .catch(() => null) : Promise.resolve(null);
 
 function saveRecordToServer(rec) {
   recordsApi.save(rec)
@@ -640,6 +644,8 @@ function openRecordsMenu() {
   const menu = document.getElementById('recordsMenu');
   const list = document.getElementById('recordsList');
   const request = ++recordsListRequest;
+  let liveRecordsLoaded = false;
+  let liveRecordsFailed = false;
   if (cachedRecordList && Date.now() - cachedRecordListAt > RECORDS_CACHE_MAX_AGE) cachedRecordList = null;
   if (!cachedRecordList) {
     try {
@@ -660,9 +666,22 @@ function openRecordsMenu() {
     list.textContent = '読み込み中…';
   }
   menu.style.display = 'flex';
+  if (!cachedRecordList) recordSnapshot.then(data => {
+    if (request !== recordsListRequest || liveRecordsLoaded || cachedRecordList || !data || !data.ok || data.apiUrl !== RECORDS_API || !Array.isArray(data.records)) return;
+    cachedRecordList = data.records;
+    cachedRecordListAt = Date.now();
+    renderRecordsList(data.records);
+    const note = document.createElement('div');
+    note.className = 'sub';
+    note.textContent = liveRecordsFailed
+      ? '最新の記録を取得できませんでした。保存済みの一覧を表示しています。'
+      : '保存済みの一覧を表示中。最新の記録を確認しています…';
+    list.prepend(note);
+  });
   recordsApi.list()
     .then(items => {
       if (request !== recordsListRequest) return;
+      liveRecordsLoaded = true;
       cachedRecordList = items;
       cachedRecordListAt = Date.now();
       try { localStorage.setItem(RECORDS_CACHE_KEY, JSON.stringify({ time: cachedRecordListAt, records: items })); } catch (e) { /* 保存できなくても使える */ }
@@ -670,6 +689,7 @@ function openRecordsMenu() {
     })
     .catch(() => {
       if (request !== recordsListRequest) return;
+      liveRecordsFailed = true;
       if (!cachedRecordList) { list.textContent = '対局記録を取得できませんでした' + RECORDS_HELP; return; }
       const note = list.querySelector('.sub');
       if (note) note.textContent = '最新の記録を取得できませんでした。前回の一覧を表示しています。';

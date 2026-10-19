@@ -118,6 +118,8 @@ let apps = [];
 const APPS_CACHE_KEY = 'ndzemi-apps-list:' + API_URL;
 const APPS_CACHE_MAX_AGE = 10 * 60 * 1000;
 let loadRequest = 0;
+let liveAppsLoaded = false;
+let liveAppsFailed = false;
 
 // 安全のため、http(s) の URL だけを扱う
 function safeUrl(s) {
@@ -200,17 +202,36 @@ function saveCachedApps() {
 function showCachedApps() {
   try {
     const cached = localStorage.getItem(APPS_CACHE_KEY);
-    if (!cached) return;
+    if (!cached) return false;
     const saved = JSON.parse(cached);
-    if (!saved || !Array.isArray(saved.apps) || !Number.isFinite(saved.time) || Date.now() < saved.time || Date.now() - saved.time > APPS_CACHE_MAX_AGE) return;
+    if (!saved || !Array.isArray(saved.apps) || !Number.isFinite(saved.time) || Date.now() < saved.time || Date.now() - saved.time > APPS_CACHE_MAX_AGE) return false;
     apps = saved.apps.map(a => ({ time: a.time, author: String(a.author), name: String(a.name), url: safeUrl(a.url), image: safeImage(a.image) })).filter(a => a.url);
     render();
+    return true;
   } catch (e) { /* 保存済みの一覧が読めなければ通常どおり取得する */ }
+  return false;
+}
+
+// 初めて開く人にも、公開サイト上の一覧を先に見せる
+function showSnapshotApps() {
+  if (!API_URL) return;
+  fetch('snapshot.json')
+    .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+    .then(data => {
+      if (liveAppsLoaded || !data.ok || data.apiUrl !== API_URL) return;
+      apps = normalizeApps(data.apps);
+      render();
+      statusEl.textContent = liveAppsFailed
+        ? '最新の一覧を取得できませんでした。保存済みの一覧を表示しています。'
+        : '保存済みの一覧を表示中。最新の情報を確認しています…';
+    })
+    .catch(() => { /* 控えがなくても Google から取得する */ });
 }
 
 function load() {
   if (!API_URL) { showNotice('アプリ一覧は準備中です。登録の受け付けが始まるまでお待ちください。'); return; }
   const request = ++loadRequest;
+  liveAppsFailed = false;
   document.getElementById('openRegister').disabled = false;
   statusEl.textContent = apps.length ? '前回の一覧を表示中。最新の情報を確認しています…' : '読み込み中…';
   fetch(`${API_URL}?t=${Date.now()}`)
@@ -219,11 +240,13 @@ function load() {
       if (request !== loadRequest) return;
       if (!data.ok) throw new Error();
       apps = normalizeApps(data.apps);
+      liveAppsLoaded = true;
       render();
       saveCachedApps();
     })
     .catch(() => {
       if (request !== loadRequest) return;
+      liveAppsFailed = true;
       statusEl.textContent = apps.length
         ? '最新の一覧を取得できませんでした。前回の一覧を表示しています。「最新の一覧を読み込む」を押して再試行してください。'
         : '一覧を読み込めませんでした。しばらくしてから「最新の一覧を読み込む」を押してください。';
@@ -337,7 +360,7 @@ form.addEventListener('submit', e => {
 document.getElementById('openRegister').addEventListener('click', openRegister);
 document.getElementById('reloadBtn').addEventListener('click', load);
 searchEl.addEventListener('input', render);
-showCachedApps();
+if (!showCachedApps()) showSnapshotApps();
 load();
 // 手順書などから …/apps/#register で開いたときは、登録欄を最初から開く
 if (location.hash === '#register' && API_URL) openRegister();

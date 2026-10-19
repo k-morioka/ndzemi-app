@@ -115,7 +115,8 @@ const statusEl = document.getElementById('status');
 const listEl = document.getElementById('list');
 const searchEl = document.getElementById('search');
 let apps = [];
-const APPS_SESSION_KEY = 'ndzemi-apps-list:' + API_URL;
+const APPS_CACHE_KEY = 'ndzemi-apps-list:' + API_URL;
+const APPS_CACHE_MAX_AGE = 10 * 60 * 1000;
 let loadRequest = 0;
 
 // 安全のため、http(s) の URL だけを扱う
@@ -193,16 +194,16 @@ function normalizeApps(items) {
 }
 
 function saveCachedApps() {
-  try { sessionStorage.setItem(APPS_SESSION_KEY, JSON.stringify(apps)); } catch (e) { /* 保存できなくても使える */ }
+  try { localStorage.setItem(APPS_CACHE_KEY, JSON.stringify({ time: Date.now(), apps })); } catch (e) { /* 保存できなくても使える */ }
 }
 
 function showCachedApps() {
   try {
-    const cached = sessionStorage.getItem(APPS_SESSION_KEY);
+    const cached = localStorage.getItem(APPS_CACHE_KEY);
     if (!cached) return;
-    const items = JSON.parse(cached);
-    if (!Array.isArray(items)) return;
-    apps = items.map(a => ({ time: a.time, author: String(a.author), name: String(a.name), url: safeUrl(a.url), image: safeImage(a.image) })).filter(a => a.url);
+    const saved = JSON.parse(cached);
+    if (!saved || !Array.isArray(saved.apps) || !Number.isFinite(saved.time) || Date.now() < saved.time || Date.now() - saved.time > APPS_CACHE_MAX_AGE) return;
+    apps = saved.apps.map(a => ({ time: a.time, author: String(a.author), name: String(a.name), url: safeUrl(a.url), image: safeImage(a.image) })).filter(a => a.url);
     render();
   } catch (e) { /* 保存済みの一覧が読めなければ通常どおり取得する */ }
 }

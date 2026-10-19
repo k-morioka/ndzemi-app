@@ -337,8 +337,10 @@ const recordsApi = RECORDS_API ? {
   get: id => fetch('/api/records/' + encodeURIComponent(id)).then(getJson),
 };
 const RECORDS_HELP = RECORDS_API ? '(通信状態を確認して、しばらくしてから試してください)' : '(サーバー経由で開いているか確認してください)';
-const RECORDS_SESSION_KEY = 'ndzemi-game-records:' + RECORDS_API;
+const RECORDS_CACHE_KEY = 'ndzemi-game-records:' + RECORDS_API;
+const RECORDS_CACHE_MAX_AGE = 10 * 60 * 1000;
 let cachedRecordList = null;
+let cachedRecordListAt = 0;
 let recordsListRequest = 0;
 
 function saveRecordToServer(rec) {
@@ -346,10 +348,12 @@ function saveRecordToServer(rec) {
     .then(res => {
       if (cachedRecordList && res.id) {
         cachedRecordList = [{ id: res.id, date: rec.date, human: rec.human, moves: rec.moves.length, result: rec.result }, ...cachedRecordList].slice(0, 200);
-        try { sessionStorage.setItem(RECORDS_SESSION_KEY, JSON.stringify(cachedRecordList)); } catch (e) { /* 保存できなくても使える */ }
+        cachedRecordListAt = Date.now();
+        try { localStorage.setItem(RECORDS_CACHE_KEY, JSON.stringify({ time: cachedRecordListAt, records: cachedRecordList })); } catch (e) { /* 保存できなくても使える */ }
       } else {
         cachedRecordList = null;
-        try { sessionStorage.removeItem(RECORDS_SESSION_KEY); } catch (e) { /* 保存できなくても使える */ }
+        cachedRecordListAt = 0;
+        try { localStorage.removeItem(RECORDS_CACHE_KEY); } catch (e) { /* 保存できなくても使える */ }
       }
       setMsg('対局記録を保存しました');
     })
@@ -636,10 +640,14 @@ function openRecordsMenu() {
   const menu = document.getElementById('recordsMenu');
   const list = document.getElementById('recordsList');
   const request = ++recordsListRequest;
+  if (cachedRecordList && Date.now() - cachedRecordListAt > RECORDS_CACHE_MAX_AGE) cachedRecordList = null;
   if (!cachedRecordList) {
     try {
-      const saved = JSON.parse(sessionStorage.getItem(RECORDS_SESSION_KEY));
-      if (Array.isArray(saved)) cachedRecordList = saved;
+      const saved = JSON.parse(localStorage.getItem(RECORDS_CACHE_KEY));
+      if (saved && Array.isArray(saved.records) && Number.isFinite(saved.time) && Date.now() >= saved.time && Date.now() - saved.time <= RECORDS_CACHE_MAX_AGE) {
+        cachedRecordList = saved.records;
+        cachedRecordListAt = saved.time;
+      }
     } catch (e) { /* 保存済みの一覧が読めなければ通常どおり取得する */ }
   }
   if (cachedRecordList) {
@@ -656,7 +664,8 @@ function openRecordsMenu() {
     .then(items => {
       if (request !== recordsListRequest) return;
       cachedRecordList = items;
-      try { sessionStorage.setItem(RECORDS_SESSION_KEY, JSON.stringify(items)); } catch (e) { /* 保存できなくても使える */ }
+      cachedRecordListAt = Date.now();
+      try { localStorage.setItem(RECORDS_CACHE_KEY, JSON.stringify({ time: cachedRecordListAt, records: items })); } catch (e) { /* 保存できなくても使える */ }
       renderRecordsList(items);
     })
     .catch(() => {

@@ -337,10 +337,22 @@ const recordsApi = RECORDS_API ? {
   get: id => fetch('/api/records/' + encodeURIComponent(id)).then(getJson),
 };
 const RECORDS_HELP = RECORDS_API ? '(通信状態を確認して、しばらくしてから試してください)' : '(サーバー経由で開いているか確認してください)';
+const RECORDS_SESSION_KEY = 'ndzemi-game-records:' + RECORDS_API;
+let cachedRecordList = null;
+let recordsListRequest = 0;
 
 function saveRecordToServer(rec) {
   recordsApi.save(rec)
-    .then(() => setMsg('対局記録を保存しました'))
+    .then(res => {
+      if (cachedRecordList && res.id) {
+        cachedRecordList = [{ id: res.id, date: rec.date, human: rec.human, moves: rec.moves.length, result: rec.result }, ...cachedRecordList].slice(0, 200);
+        try { sessionStorage.setItem(RECORDS_SESSION_KEY, JSON.stringify(cachedRecordList)); } catch (e) { /* 保存できなくても使える */ }
+      } else {
+        cachedRecordList = null;
+        try { sessionStorage.removeItem(RECORDS_SESSION_KEY); } catch (e) { /* 保存できなくても使える */ }
+      }
+      setMsg('対局記録を保存しました');
+    })
     // 保存先から理由が返ってきた場合は、原因を調べやすいようにその理由も表示する
     .catch(err => setMsg('対局記録を保存できませんでした' + (err.fromServer && err.message ? `: ${err.message}` : RECORDS_HELP)));
 }
@@ -591,40 +603,68 @@ function formatDate(iso) {
   return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+function renderRecordsList(items) {
+  const list = document.getElementById('recordsList');
+  list.innerHTML = '';
+  if (items.length === 0) { list.textContent = 'まだ対局記録がありません'; return; }
+  for (const it of items) {
+    // 保存先は共有なので、受け取った値は数値などに整えてから textContent で表示する
+    const human = Number(it.human);
+    const me = PLAYERS[human] ? PLAYERS[human].name : '?';
+    let result = '';
+    if (it.result && Array.isArray(it.result.winners) && Array.isArray(it.result.scores)) {
+      const winnerIds = it.result.winners.map(Number).filter(p => PLAYERS[p]);
+      const winners = winnerIds.map(p => PLAYERS[p].name).join('・');
+      const mine = winnerIds.includes(human) ? '勝ち' : '負け';
+      const scores = it.result.scores.slice(0, PLAYERS.length).map((s, p) => PLAYERS[p].name + Number(s)).join(' ');
+      result = `勝者: ${winners}(あなたの${mine}) / 得点 ${scores}`;
+    }
+    const div = document.createElement('div');
+    div.className = 'item';
+    const main = document.createElement('div');
+    main.textContent = `${formatDate(it.date)} — あなた: ${me} / ${Number(it.moves) || 0} 手`;
+    const sub = document.createElement('div');
+    sub.className = 'sub';
+    sub.textContent = result;
+    div.append(main, sub);
+    div.addEventListener('click', () => loadRecordFromServer(it.id));
+    list.appendChild(div);
+  }
+}
+
 function openRecordsMenu() {
   const menu = document.getElementById('recordsMenu');
   const list = document.getElementById('recordsList');
-  list.textContent = '読み込み中…';
+  const request = ++recordsListRequest;
+  if (!cachedRecordList) {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(RECORDS_SESSION_KEY));
+      if (Array.isArray(saved)) cachedRecordList = saved;
+    } catch (e) { /* 保存済みの一覧が読めなければ通常どおり取得する */ }
+  }
+  if (cachedRecordList) {
+    renderRecordsList(cachedRecordList);
+    const note = document.createElement('div');
+    note.className = 'sub';
+    note.textContent = '前回の一覧を表示中。最新の記録を確認しています…';
+    list.prepend(note);
+  } else {
+    list.textContent = '読み込み中…';
+  }
   menu.style.display = 'flex';
   recordsApi.list()
     .then(items => {
-      list.innerHTML = '';
-      if (items.length === 0) { list.textContent = 'まだ対局記録がありません'; return; }
-      for (const it of items) {
-        // 保存先は共有なので、受け取った値は数値などに整えてから textContent で表示する
-        const human = Number(it.human);
-        const me = PLAYERS[human] ? PLAYERS[human].name : '?';
-        let result = '';
-        if (it.result && Array.isArray(it.result.winners) && Array.isArray(it.result.scores)) {
-          const winnerIds = it.result.winners.map(Number).filter(p => PLAYERS[p]);
-          const winners = winnerIds.map(p => PLAYERS[p].name).join('・');
-          const mine = winnerIds.includes(human) ? '勝ち' : '負け';
-          const scores = it.result.scores.slice(0, PLAYERS.length).map((s, p) => PLAYERS[p].name + Number(s)).join(' ');
-          result = `勝者: ${winners}(あなたの${mine}) / 得点 ${scores}`;
-        }
-        const div = document.createElement('div');
-        div.className = 'item';
-        const main = document.createElement('div');
-        main.textContent = `${formatDate(it.date)} — あなた: ${me} / ${Number(it.moves) || 0} 手`;
-        const sub = document.createElement('div');
-        sub.className = 'sub';
-        sub.textContent = result;
-        div.append(main, sub);
-        div.addEventListener('click', () => loadRecordFromServer(it.id));
-        list.appendChild(div);
-      }
+      if (request !== recordsListRequest) return;
+      cachedRecordList = items;
+      try { sessionStorage.setItem(RECORDS_SESSION_KEY, JSON.stringify(items)); } catch (e) { /* 保存できなくても使える */ }
+      renderRecordsList(items);
     })
-    .catch(() => { list.textContent = '対局記録を取得できませんでした' + RECORDS_HELP; });
+    .catch(() => {
+      if (request !== recordsListRequest) return;
+      if (!cachedRecordList) { list.textContent = '対局記録を取得できませんでした' + RECORDS_HELP; return; }
+      const note = list.querySelector('.sub');
+      if (note) note.textContent = '最新の記録を取得できませんでした。前回の一覧を表示しています。';
+    });
 }
 
 function loadRecordFromServer(id) {

@@ -13,6 +13,7 @@
  *
  * 対局記録はスプレッドシートの「game_records」シートに1局1行で保存されます(最初の保存時に自動で作られます)。
  * 記録を消したいときは、その行を削除します。
+ * 一覧は最大30秒キャッシュします。シートを手で直した内容は、最大30秒後に反映されます。
  * このスクリプトを書き換えたときは「デプロイ」→「デプロイを管理」→ 編集(鉛筆)→ バージョン「新バージョン」で更新します。
  *
  * API(game/index.html から呼び出す):
@@ -25,6 +26,7 @@ const RECORD_SHEET_NAME = 'game_records';
 const RECORD_HEADERS = ['ID', '保存日時', 'あなたの色', '手数', '結果', '記録'];
 const MAX_RECORD_CHARS = 48000; // 1局分の記録(JSON)の最大文字数(スプレッドシートの1セルは最大 50,000 文字)
 const MAX_RECORDS_LISTED = 200; // 一覧に返す対局記録の最大数(新しい順)
+const RECORDS_CACHE_KEY = 'records-list-v1';
 
 function getSheet_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -99,6 +101,7 @@ function saveRecord_(rec) {
   lock.waitLock(10000); // 同時に保存されても行が壊れないようにする
   try {
     getSheet_().appendRow([id, now, clean.human, clean.moves.length, clean.result ? JSON.stringify(clean.result) : '', text]);
+    CacheService.getScriptCache().remove(RECORDS_CACHE_KEY);
   } finally {
     lock.releaseLock();
   }
@@ -107,13 +110,16 @@ function saveRecord_(rec) {
 
 // 一覧用の概要(記録の中身は含めない)を新しい順に返す
 function listRecords_() {
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get(RECORDS_CACHE_KEY);
+  if (cached !== null) return JSON.parse(cached);
   const sheet = getSheet_();
-  const n = sheet.getLastRow() - 1;
+  const lastRow = sheet.getLastRow();
+  const n = Math.min(lastRow - 1, MAX_RECORDS_LISTED);
   if (n < 1) return [];
-  return sheet.getRange(2, 1, n, 5).getValues()
+  const records = sheet.getRange(lastRow - n + 1, 1, n, 5).getValues()
     .filter(r => r[0])
     .reverse()
-    .slice(0, MAX_RECORDS_LISTED)
     .map(r => {
       let result = null;
       try { result = r[4] ? JSON.parse(r[4]) : null; } catch (err) { result = null; }
@@ -126,6 +132,10 @@ function listRecords_() {
         result,
       };
     });
+  const text = JSON.stringify(records);
+  // キャッシュは1件100KBまで。大きい場合は次回もシートから読む
+  if (Utilities.newBlob(text).getBytes().length < 100000) cache.put(RECORDS_CACHE_KEY, text, 30);
+  return records;
 }
 
 function getRecord_(id) {

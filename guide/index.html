@@ -88,13 +88,13 @@
     <!-- ===================== 1. Claude Codeの準備 ===================== -->
     <section id="setup">
       <h2><span class="num">1</span>Claude Codeの準備</h2>
-      <p>VS Code(エディター)に Claude Code の拡張機能を入れ、<b>メイジメールに届いた招待</b>のアカウントでログインします。</p>
+      <p>VS Code(エディター)に Claude Code の拡張機能を入れ、<b>メイジメールに届いた招待リンク</b>から参加したアカウントでログインします。</p>
 
       <ol class="steps">
         <li data-step="setup-invite">
-          <h4>メイジメールで招待メールを確認する</h4>
-          <p>Claude Code を使うための <b>Anthropic Console(Claude Platform)</b>への招待メールは、皆さんの<b>メイジメール</b>(大学のメールアドレス)に送ってあります。
-            メイジメールを開き、Anthropic からの招待メールを探して、メール内のボタンから招待を受け入れてください。</p>
+          <h4>メイジメールで招待リンクを確認する</h4>
+          <p>Claude Code を使うための <b>Anthropic Console(Claude Platform)</b>への招待リンクは、<b>Anthropic からの自動送信、または教員からの招待メール</b>で、皆さんの<b>メイジメール</b>(大学のメールアドレス)に届きます。
+            メイジメールで招待メールを探し、記載されたリンクを開いて招待を受け入れてください。</p>
           <div class="callout warn">見つからないときは<b>迷惑メールフォルダ</b>も確認してください。</div>
         </li>
         <li data-step="setup-vscode">
@@ -129,7 +129,7 @@
         <li data-step="setup-browser">
           <h4>ブラウザでメイジメールのアカウントで認証する</h4>
           <p>「Code で外部の Web サイトを開きますか?」という確認が出たら<b>「開く」</b>を押します。ブラウザで Anthropic Console(platform.claude.com)のログイン画面が開くので、
-            <b>招待メールを受け取ったメイジメールのアドレス</b>でログインし、画面の指示に従って許可してください。
+            <b>招待リンクを案内されたメイジメールのアドレス</b>でログインし、画面の指示に従って許可してください。
             確認用のメールが届いた場合は、メイジメールで開いて手続きを進めます。</p>
           <figure class="shot" data-src="images/setup-browser.png">
             <figcaption>「開く」を押すとブラウザで認証画面が開く。右側は VS Code 側の「Continue in browser」画面</figcaption>
@@ -188,8 +188,8 @@
       <details class="trouble">
         <summary>うまくいかないとき</summary>
         <ul>
-          <li><b>招待メールが見つからない:</b> メイジメールの迷惑メールフォルダを確認してください。それでも見つからなければ教員に連絡してください。</li>
-          <li><b>ログインできない:</b> 招待メールで招待を受け入れたか、<b>メイジメールのアドレス</b>でログインしているか(個人のメールアドレスになっていないか)を確認してください。ログイン方法で「Claude.ai Subscription」を選んでしまった場合は、Claude Code のチャット欄で <code>/logout</code> と送ってログアウトし、「Anthropic Console」でログインし直してください。</li>
+          <li><b>招待の案内が見つからない:</b> メイジメールの迷惑メールフォルダを確認してください。それでも見つからなければ教員に連絡してください。</li>
+          <li><b>ログインできない:</b> 招待リンクを開いて招待を受け入れたか、<b>メイジメールのアドレス</b>でログインしているか(個人のメールアドレスになっていないか)を確認してください。ログイン方法で「Claude.ai Subscription」を選んでしまった場合は、Claude Code のチャット欄で <code>/logout</code> と送ってログアウトし、「Anthropic Console」でログインし直してください。</li>
           <li><b>アイコンが出ない:</b> VS Code を再起動してみてください。拡張機能がインストール済みになっているかも確認しましょう。</li>
           <li>それでも解決しないときは、表示されているメッセージを控えて教員に相談してください。</li>
         </ul>

@@ -138,6 +138,51 @@
             VS Code の「Or, paste your authorization code manually」の欄に貼り付けて「Continue」を押します。</p>
           <div class="callout tip">ブラウザが開かなかったときは、「If the browser didn't open, visit this URL」の欄の右にあるボタンで URL をコピーし、ブラウザに貼り付けて開きます。</div>
         </li>
+      </ol>
+
+      <details class="trouble">
+        <summary>うまくいかないとき</summary>
+        <ul>
+          <li><b>招待の案内が見つからない:</b> メイジメールの迷惑メールフォルダを確認してください。それでも見つからなければ教員に連絡してください。</li>
+          <li><b>ログインできない:</b> 招待リンクを開いて招待を受け入れたか、<b>メイジメールのアドレス</b>でログインしているか(個人のメールアドレスになっていないか)を確認してください。ログイン方法で「Claude.ai Subscription」を選んでしまった場合は、Claude Code のチャット欄で <code>/logout</code> と送ってログアウトし、「Anthropic Console」でログインし直してください。</li>
+          <li><b>アイコンが出ない:</b> VS Code を再起動してみてください。拡張機能がインストール済みになっているかも確認しましょう。</li>
+          <li>それでも解決しないときは、表示されているメッセージを控えて教員に相談してください。</li>
+        </ul>
+      </details>
+    </section>
+
+    <!-- ===================== 2. 最初のWebアプリを作る ===================== -->
+    <section id="first-app">
+      <h2><span class="num">2</span>最初のWebアプリを作る</h2>
+      <p>作業用のフォルダを作り、Claude Code の設定を確認してから最初の指示を出し、ブラウザで動かすところまで進めます。</p>
+
+      <ol class="steps">
+        <li data-step="first-folder">
+          <h4>作業用フォルダを作る</h4>
+          <p>エクスプローラー(Mac は Finder)で、アプリ用の新しいフォルダを作ります。例: <code>ドキュメント\webapp\my-first-app</code></p>
+          <div class="callout tip">フォルダ名は<b>半角英数字とハイフン</b>(例: <code>my-first-app</code>)にしておくと、後で公開するときに困りません。</div>
+        </li>
+        <li data-step="first-open">
+          <h4>VS Code でフォルダを開く</h4>
+          <p>VS Code のメニューから <b>ファイル → フォルダーを開く</b> を選び、作ったフォルダを開きます。</p>
+          <figure class="shot" data-src="images/first-open-folder.png">
+            <figcaption>「ファイル」メニューの「フォルダーを開く...」</figcaption>
+          </figure>
+          <div class="callout warn">Claude Code は<b>開いているフォルダの中</b>で作業します。必ず作業用フォルダを開いてから指示を出しましょう。</div>
+        </li>
+        <li data-step="first-trust">
+          <h4>フォルダを「信頼する」</h4>
+          <p>「このフォルダー内のファイルの作成者を信頼しますか?」と聞かれたら、自分で作ったフォルダなので「信頼する」を選びます。</p>
+          <p>画面上部に<b>「制限モードは、安全なコード参照のためのものです…」</b>という帯が出ている場合は、まだ信頼されていません。
+            帯の<b>「管理」</b>をクリックし、表示された画面で<b>「信頼する」</b>を押してください。</p>
+          <figure class="shot" data-src="images/first-trust-banner.png">
+            <figcaption>制限モードの帯。「管理」をクリックする</figcaption>
+          </figure>
+          <figure class="shot" data-src="images/first-trust.png">
+            <figcaption>「ワークスペースの信頼」画面。左側の青い「信頼する」を押す</figcaption>
+          </figure>
+          <div class="callout warn">制限モードのままだと、Claude Code などの拡張機能が使えなかったり、機能が制限されたりします。</div>
+        </li>
         <li data-step="setup-model">
           <h4>モデル(どの AI を使うか)を「Sonnet」にする</h4>
           <p>Claude にはいくつかの種類(<b>モデル</b>)があり、賢さ・速さ・利用料金が違います。入力欄の左下に表示されているモデル名(例: 「Opus 5.5 Medium」)をクリックすると、モデルを選ぶメニューが開きます。</p>
@@ -183,51 +228,6 @@
           <div class="prompt">これからは日本語で回答してください。</div>
           <p>途中でまた英語に戻ったときも、同じように頼めば日本語に戻ります。</p>
         </li>
-      </ol>
-
-      <details class="trouble">
-        <summary>うまくいかないとき</summary>
-        <ul>
-          <li><b>招待の案内が見つからない:</b> メイジメールの迷惑メールフォルダを確認してください。それでも見つからなければ教員に連絡してください。</li>
-          <li><b>ログインできない:</b> 招待リンクを開いて招待を受け入れたか、<b>メイジメールのアドレス</b>でログインしているか(個人のメールアドレスになっていないか)を確認してください。ログイン方法で「Claude.ai Subscription」を選んでしまった場合は、Claude Code のチャット欄で <code>/logout</code> と送ってログアウトし、「Anthropic Console」でログインし直してください。</li>
-          <li><b>アイコンが出ない:</b> VS Code を再起動してみてください。拡張機能がインストール済みになっているかも確認しましょう。</li>
-          <li>それでも解決しないときは、表示されているメッセージを控えて教員に相談してください。</li>
-        </ul>
-      </details>
-    </section>
-
-    <!-- ===================== 2. 最初のWebアプリを作る ===================== -->
-    <section id="first-app">
-      <h2><span class="num">2</span>最初のWebアプリを作る</h2>
-      <p>作業用のフォルダを作り、Claude Code に最初の指示を出して、ブラウザで動かすところまで進めます。</p>
-
-      <ol class="steps">
-        <li data-step="first-folder">
-          <h4>作業用フォルダを作る</h4>
-          <p>エクスプローラー(Mac は Finder)で、アプリ用の新しいフォルダを作ります。例: <code>ドキュメント\webapp\my-first-app</code></p>
-          <div class="callout tip">フォルダ名は<b>半角英数字とハイフン</b>(例: <code>my-first-app</code>)にしておくと、後で公開するときに困りません。</div>
-        </li>
-        <li data-step="first-open">
-          <h4>VS Code でフォルダを開く</h4>
-          <p>VS Code のメニューから <b>ファイル → フォルダーを開く</b> を選び、作ったフォルダを開きます。</p>
-          <figure class="shot" data-src="images/first-open-folder.png">
-            <figcaption>「ファイル」メニューの「フォルダーを開く...」</figcaption>
-          </figure>
-          <div class="callout warn">Claude Code は<b>開いているフォルダの中</b>で作業します。必ず作業用フォルダを開いてから指示を出しましょう。</div>
-        </li>
-        <li data-step="first-trust">
-          <h4>フォルダを「信頼する」</h4>
-          <p>「このフォルダー内のファイルの作成者を信頼しますか?」と聞かれたら、自分で作ったフォルダなので「信頼する」を選びます。</p>
-          <p>画面上部に<b>「制限モードは、安全なコード参照のためのものです…」</b>という帯が出ている場合は、まだ信頼されていません。
-            帯の<b>「管理」</b>をクリックし、表示された画面で<b>「信頼する」</b>を押してください。</p>
-          <figure class="shot" data-src="images/first-trust-banner.png">
-            <figcaption>制限モードの帯。「管理」をクリックする</figcaption>
-          </figure>
-          <figure class="shot" data-src="images/first-trust.png">
-            <figcaption>「ワークスペースの信頼」画面。左側の青い「信頼する」を押す</figcaption>
-          </figure>
-          <div class="callout warn">制限モードのままだと、Claude Code などの拡張機能が使えなかったり、機能が制限されたりします。</div>
-        </li>
         <li data-step="first-prompt">
           <h4>Claude Code に最初の指示を出す</h4>
           <p>Claude Code を開き、作りたいものを伝えます。最初は<b>小さく・シンプルに</b>頼むのがコツです。例:</p>
@@ -238,7 +238,7 @@
         </li>
         <li data-step="first-permission">
           <h4>許可を求められたら内容を読んで答える</h4>
-          <p>Claude Code はコマンドを実行するときなどに、<b>許可を求めてきます</b>(どの操作で聞いてくるかは、1章で選んだモードによって変わります)。何をしようとしているかを読み、問題なければ許可します。
+          <p>Claude Code はコマンドを実行するときなどに、<b>許可を求めてきます</b>(どの操作で聞いてくるかは、この章で選んだモードによって変わります)。何をしようとしているかを読み、問題なければ許可します。
             分からないときは許可せずに「これは何をするコマンドですか?」と質問してかまいません。</p>
         </li>
         <li data-step="first-run">
